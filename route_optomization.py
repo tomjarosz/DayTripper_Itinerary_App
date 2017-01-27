@@ -1,5 +1,14 @@
 import time
 
+
+#Currently this system is 'static' in the sense that there is 
+#only one transit time between any two points A and B no matter the
+#time of day(using the dictionary data structure directly below. 
+#As was pointed out during our presentation, that's not
+#the most accurate way to do it, so we could improve by using a function
+#which takes the unique string of place A, unique string of place B and time
+#of day, and returns transit time.
+
 #We'll need a dictionary like this, mapping the time
 #from each node to every other. Labels are unique identifiers
 #for destinations.
