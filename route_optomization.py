@@ -12,6 +12,8 @@ import time
 #We'll need a dictionary like this, mapping the time
 #from each node to every other. Labels are unique identifiers
 #for destinations.
+#
+#EDIT: This data structure depracated
 times = {'a':{'b':10,'c':2,'d':3},
              'b':{'a':13,'c':25,'d':6},
              'c':{'b':14,'a':8,'d':7},
