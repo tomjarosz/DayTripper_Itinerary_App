@@ -45,8 +45,6 @@ def get_min_cost(times, delimiter = None):
         delimiter: integer (optional)
     Return: list of strings, integer
     '''
-    #This will have to be changed to reflect the priority of each site,
-    #with higher priority sites coming first
     labels = list(times.keys())
     if delimiter:
         labels = labels[:delimiter + 1]
