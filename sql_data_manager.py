@@ -1,8 +1,16 @@
-def data_manager(c, redo):
-    #run this to start all over
-    if redo:
-        c.execute('''DROP TABLE IF EXISTS gps_cities''')
-        c.execute('''DROP TABLE IF EXISTS places''')
+import os
+import sqlite3
+
+DATA_DIR = os.path.dirname(__file__)
+DATABASE_FILENAME = os.path.join(DATA_DIR, 'app_data.db')
+
+if __name__ == '__main__':
+    sql_db = sqlite3.connect(DATABASE_FILENAME)
+    
+    c = sql_db.cursor()
+
+    c.execute('''DROP TABLE IF EXISTS gps_cities''')
+    c.execute('''DROP TABLE IF EXISTS places''')
         
     c.execute('''
         CREATE TABLE IF NOT EXISTS gps_cities
@@ -13,12 +21,18 @@ def data_manager(c, redo):
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS places
-        (city_id VARCHAR(100),
+        (date_update VARCHAR(10),
+        city_id VARCHAR(100),
         place_id VARCHAR(50),
         name VARCHAR(100),
+        types VARCHAR(100),
         address VARCHAR(100),
-        phone VARCHAR(20),
         rating INT,
-        lat INT,
-        lon INT,
+        price_level INT,
+        location_lat INT,
+        location_lng INT,
+        photo_reference VARCHAR(256),
         PRIMARY KEY (place_id));''')
+
+    c.close()
+    sql_db.close()

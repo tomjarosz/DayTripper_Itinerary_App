@@ -2,69 +2,156 @@ from geopy import geocoders
 import googlemaps
 import json
 import requests
-from datetime import datetime
+from geopy.geocoders import Nominatim
+
 import csv
+import os
+import sqlite3
+import time
 
-def get_city_lat_long(city_name):
-    '''
-    Determines the lat/long for any city center entered by user
-    '''
+KEY = 'AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8'
+DATA_DIR = os.path.dirname(__file__)
+DATABASE_FILENAME = os.path.join(DATA_DIR, 'app_data.db')
 
-    link = 'https://maps.googleapis.com/maps/api/geocode/json?address=___'
-    link = link.replace('___', city_name)
-    response = requests.get(link)
-    city_json = response.json()
-    lat_long = city_json['results'][0]['geometry']['location']
+
+def places_from_dict(search_params_ui):
+    '''
+    First of two functions that interacts with UI
+
+    Gets places information and loads data to SQL. Returns a list of places
+
+    Input:
+        - Dictionary with user entered parameters
+
+    Output:
+        - list of tuples with places' information
+    '''
+    city = search_params_ui['city']
+    user_types = search_params_ui['types']
+
+    sql_db = sqlite3.connect(DATABASE_FILENAME)
+    c = sql_db.cursor()
     
-    lat_lng = []
-    lat_lng.append(str(lat_long['lat']))
-    lat_lng.append(str(lat_long['lng']))
-    return ",".join(lat_lng)
+    #1. Check if we have info for that city
+    c.execute('''
+        SELECT place_id, name, types, address, rating, price_level, location_lat, location_lng  
+        FROM places WHERE city_id = ? AND DATE(date_update) > DATE('now','-6 days') ''', [city])
 
+    data = c.fetchall()
+    if data:
+        #here we should return data filtered for user_types
+        return data
 
-def make_request_from_params(param_dict, query, type_var, key_google):
-    '''
-    Formats the correct API URL request given user's parameters for one category
-    '''
+    city_lat, city_lon = helper_city_lat_long(city, sql_db)
 
-    lat_lng = get_city_lat_long(param_dict['city'])
-    radius_dist = 25000
-    query = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat_lng}&radius={radius_dist}&types={type_cat}&key={key_google}'.format(lat_lng=lat_lng, radius_dist=radius_dist, type_cat=type_var, key_google=key_google)
-    return query
+    all_types = ['amusement_park', 'aquarium', 'art_gallery', 'bakery', 'book_store',
+        'bowling_alley', 'casino', 'cemetery', 'church', 'city_hall', 'courthouse', 
+        'embassy', 'fire_station', 'hindu_temple', 'library', 'local_government_office',
+        'mosque', 'museum', 'park', 'place_of_worship',
+        'spa', 'stadium', 'synagogue', 'university', 'zoo']
 
-
-def get_json_places(query):
-    '''
-    Retrieves all location information from Google API
-    '''
+    query = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?\
+location={lat},{long}&radius=10000&types=({type})&rankby=prominence&key={key}'.format(
+            lat=city_lat, long=city_lon, key=KEY, type='|'.join(all_types))    
 
     places = requests.get(query)
-    return json.loads(places.text)
 
+    json_data = json.loads(places.text)
+    
+    has_next = True
+    while has_next:
 
-def get_loc_attributes(places, category, csv_file):
-    '''
-    Retrieves location attributes from the API JSON and stores them in a csv file
-    '''    
-
-    with open(csv_file, 'a') as f:
-        writer = csv.writer(f)
-
-        for place in places['results']:
-            place_dict = place
+        for place in json_data['results']:
+            if 'opening_hours' in place:
+                print(place['opening_hours'])
 
             place_id = place['place_id']
             name = place['name']
+            types = ', '.join(place['types'])
             address = place['vicinity']
-            location_lat = place['geometry']['location']['lat']
-            location_lng = place['geometry']['location']['lng']
             rating = helper_check_for_data(place, 'rating')
             price_level = helper_check_for_data(place, 'price_level')
+            location_lat = place['geometry']['location']['lat']
+            location_lng = place['geometry']['location']['lng']
+            if 'photos' in place:
+                photo_reference = place['photos'][0]['photo_reference']
+            else:
+                photo_reference = 'NA'
+            
+            c.execute('''
+                REPLACE INTO places VALUES (date('now'),?,?,?,?,?,?,?,?,?,?)
+                ''', (city, place_id, name, types, address, rating, price_level, 
+                    location_lat, location_lng, photo_reference))
+            
+            sql_db.commit()
 
-            location_info = [category, place_id, name, address, location_lat, location_lng, rating, price_level]
-            writer.writerow(location_info)
+        if 'next_page_token' in json_data:
+            pagetoken = json_data['next_page_token']
+    
+            newquery = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?\
+pagetoken={ptoken}&key={key}'.format(
+            ptoken=pagetoken, key=KEY)    
+            time.sleep(2)
+            places = requests.get(newquery)
 
-    return csv_file
+            json_data = json.loads(places.text)
+        else:
+            has_next = False
+
+    c.execute('''
+        SELECT place_id, name, types, address, rating, price_level, location_lat, location_lng 
+        FROM places WHERE city_id = ?''', [city])
+    data = c.fetchall()
+    
+    #here we should return data filtered for user_types
+
+    return data
+
+
+def optimized_places(places_from_ui):
+    '''
+    Second of two functions that interacts with UI. Gets a list of places and
+    retrieves transit information from them. Then, it performs optimization
+    to find the best itinerary.
+
+    Input: places_from_ui, a list of places' id
+    
+    Output: a sorted list of places, according to their order
+    '''
+
+#    distances_matrix = helper_distances_matrix(places_from_ui)
+
+    #here we might want to filter some places first using distances (clustering some of them?)
+    transit_times_matrix = helper_transit_matrix(places_from_ui)
+
+    print(transit_times_matrix)
+
+    #LOGAN SHOULD ADD OPTIMIZATION CODE HERE AND MODIFY OUTPUT ACCORDINGLY
+    
+    opt_places = list(transit_times_matrix.keys())
+
+    return opt_places
+
+
+def helper_city_lat_long(city_name, sql_db):
+    '''
+    Determines the lat/long for any city center entered by user
+    '''
+    c = sql_db.cursor()
+
+    c.execute('SELECT city_id, lat, lon FROM gps_cities WHERE city_id = "{}"'.format(city_name))
+    data = c.fetchone()
+    if data:
+        return data[1:]
+
+    geolocator = Nominatim()
+    location = geolocator.geocode(city_name)
+    c.execute('INSERT INTO gps_cities VALUES (?,?,?)', (city_name, location.latitude, location.longitude))
+    sql_db.commit()
+
+    c.close()
+
+    return (location.latitude, location.longitude)
 
 
 def helper_check_for_data(place, attribute):
@@ -77,22 +164,63 @@ def helper_check_for_data(place, attribute):
     else:
         return 'NA'
 
+def helper_transit_matrix(places_id):
+    transit_matrix = {}
+    for i, place_a in enumerate(places_id):
+        transit_matrix[place_a] = {}
+        for place_b in places_id[i+1:]:
+            transit_matrix[place_a][place_b] = helper_transit_time(place_a, place_b)
+
+    return transit_matrix
+
+def helper_transit_time(place_id_a, place_id_b):
+    '''
+    FUNCTION TO GET TRANSIT TIME BETWEEN A AND B
+
+    THIS FUNCTION IS UNDER DEVELOPMENT
+    '''
+    query = 'https://maps.googleapis.com/maps/api/directions/json?\
+origin=place_id:{p_a}&destination=place_id:{p_b}&key={key}'.format(
+        p_a=place_id_a, p_b=place_id_b, key=KEY)
+
+    data_request = requests.get(query)
+    
+    json_data = json.loads(data_request.text)
+    
+    #CARLOS NEEDS TO FINISH THIS
+    print(len(json_data['routes'][0]['legs']))
+
+    time = 0
+    
+    return time
 
 
 if __name__ == '__main__':
 
-    csv_file = 'query_results.csv'
-    key_google = 'AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8'
-
-    param_dict = {'city': 'Chicago', 
+    # User enters parameters and process starts
+    param_dict = {'city': 'New York, NY', 
                   'time_start': 1100,
                   'time_end' : 1300,
-                  'categories': ['museum', 'park'],
+                  'types': ['museum', 'park'],
                   'mode_transporation': 'walking'}
+    
+    # Step 1. Get list of places from given search parameters
+    full_list_places = places_from_dict(param_dict)
 
-    for type_var in param_dict['categories']:
-        base_query = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat_lng}&radius={radius_dist}&types={type_cat}&key={key_google}'
-        query = make_request_from_params(param_dict, base_query, type_var, key_google)
-        places = get_json_places(query)
+    
+    # Here there should be Django code to display these places
 
-        get_loc_attributes(places, type_var, csv_file)
+    # Now, user selects places and optimization begins (I'm selecting the first 
+    # 5 places, just to test the function)
+
+    selected_places = []
+    for place in full_list_places[:4]:
+        place_id = place[0]
+        selected_places.append(place_id)
+    
+    #Optimization includes findind transit time between places
+    optimized_places = optimized_places(selected_places)
+
+    #Here there should be more Django stuff to display final info
+
+    #The end.

@@ -25,7 +25,7 @@ def get_places_info(city):
         'spa', 'stadium', 'synagogue', 'university', 'zoo']
     
     query = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?\
-location={lat},{long}&radius=50&types=({type})&key={key}'.format(
+location={lat},{long}&radius=5000&types=({type})&key={key}'.format(
             lat=city_lat, long=city_lon, key=key_google, type='|'.join(types))
 
     print(query)
@@ -33,7 +33,7 @@ location={lat},{long}&radius=50&types=({type})&key={key}'.format(
     places = requests.get(query)
     
     json_data = json.loads(places.text)
-
+    print(json_data)
     for place in json_data['results']:
         place_id = place['place_id']
         place_name = place['name']
@@ -85,25 +85,16 @@ def get_gmaps(place_id_a, place_id_b):
 
     THIS FUNCTION IS NOT FINISHED
     '''
-    gmaps = googlemaps.Client(key= key_google)
+    query = 'https://maps.googleapis.com/maps/api/directions/json?\
+origin=place_id:{p_a}&destination=place_id:{p_b}&key={key}'.format(
+        p_a=place_id_a, p_b=place_id_b, key=key_google)
 
-    # Geocoding an address
-    geocode_result = gmaps.geocode('1600 Amphitheatre Parkway, Mountain View, CA')
-    print(geocode_result)
-
-    # Look up an address with reverse geocoding
-    reverse_geocode_result = gmaps.reverse_geocode((40.714224, -73.961452))
-    print(reverse_geocode_result)
-
-    # Request directions via public transit
-    now = datetime.now()
-    directions_result = gmaps.directions("Sydney Town Hall",
-                                         "Parramatta, NSW",
-                                         mode="transit",
-                                         departure_time=now)
-
-    print(directions_result)
+    data_request = requests.get(query)
     
+    json_data = json.loads(data_request.text)
+
+    print(json_data['routes'])
+
 
 if __name__ == '__main__':
 
@@ -117,7 +108,7 @@ if __name__ == '__main__':
             cities.append(c)
 
     #User selects city and process starts
-    city = 'Chicago, IL, US'
+    city = 'Washington, DC, US'
 
     sql_db = sqlite3.connect('app_data.db')
     c = sql_db.cursor()
@@ -127,12 +118,10 @@ if __name__ == '__main__':
 
     places_info = get_places_info(city)
 
-    print(places_info)
-    
+    place_org = places_info[0]
+    place_dest = places_info[1]
 
-    #Pick random 4 places and run distance algorithm
-
-    #get_gmaps()
+    get_gmaps(place_org[0], place_dest[0])
 
     c.close()
     sql_db.close()
