@@ -1,4 +1,5 @@
 import time
+from math import radians, cos, sin, asin, sqrt
 
 
 #Currently this system is 'static' in the sense that there is 
@@ -9,15 +10,31 @@ import time
 #which takes the unique string of place A, unique string of place B and time
 #of day, and returns transit time.
 
-#We'll need a dictionary like this, mapping the time
-#from each node to every other. Labels are unique identifiers
-#for destinations.
+#Data structure needed for this file: objects containing unique ID for each place,
+#along with lat/long, and a priority
 #
-#EDIT: This data structure depracated
-times = {'a':{'b':10,'c':2,'d':3},
-             'b':{'a':13,'c':25,'d':6},
-             'c':{'b':14,'a':8,'d':7},
-             'd':{'b':16,'c':12,'a':13}}
+#Example:
+place1 = {'id':'abc', 'lat':-54.87, 'long':112.34, 'priority':3.56}
+
+
+def haversine(lon1, lat1, lon2, lat2):
+    '''
+    Calculate the circle distance between two points 
+    on the earth (specified in decimal degrees)
+    '''
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+
+    # 6367 km is the radius of the Earth
+    km = 6367 * c
+    m = km * 1000
+    return m 
 
 
 def permutations(p):
@@ -37,6 +54,10 @@ def permutations(p):
             for perm in perms:
                 rv.append([x] + perm)
     return rv
+
+#intermediate step before running get_min_cost: run through all permutations,
+#narrow down to top (10?) possible routes which minimize geographic distance,
+#then run through get min cost
 
 def get_min_cost(times, delimiter = None):
     '''
