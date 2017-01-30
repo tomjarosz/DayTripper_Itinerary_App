@@ -166,7 +166,7 @@ def helper_check_for_data(place, attribute):
 
 def helper_transit_matrix(places_id):
     transit_matrix = {}
-    for i, place_a in enumerate(places_id):
+    for i, place_a in enumerate(places_id[0:len(places_id)-1]):
         transit_matrix[place_a] = {}
         for place_b in places_id[i+1:]:
             transit_matrix[place_a][place_b] = helper_transit_time(place_a, place_b)
@@ -187,18 +187,15 @@ origin=place_id:{p_a}&destination=place_id:{p_b}&key={key}'.format(
     
     json_data = json.loads(data_request.text)
     
-    #CARLOS NEEDS TO FINISH THIS
-    print(len(json_data['routes'][0]['legs']))
+    time = json_data['routes'][0]['legs'][0]['duration']['value']
 
-    time = 0
-    
     return time
 
 
 if __name__ == '__main__':
 
     # User enters parameters and process starts
-    param_dict = {'city': 'New York, NY', 
+    param_dict = {'city': 'Buenos Aires, Argentina', 
                   'time_start': 1100,
                   'time_end' : 1300,
                   'types': ['museum', 'park'],
