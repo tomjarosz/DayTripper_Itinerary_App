@@ -1,5 +1,6 @@
 import time
 from math import radians, cos, sin, asin, sqrt
+from query_google import helper_transit_time
 
 
 #Currently this system is 'static' in the sense that there is 
@@ -14,7 +15,14 @@ from math import radians, cos, sin, asin, sqrt
 #along with lat/long, and a priority
 #
 #Example:
-place1 = {'id':'abc', 'lat':-54.87, 'long':112.34, 'priority':3.56}
+places_dict = {'a': (-54.87, 112.12, 2.79),
+            'b': (-55.37, 112.89, 3.56),
+            'c': (-58.62, 112.45, 3.98),
+            'd': (-52.39, 112.08, 4.07),
+            'e': (-50.99, 112.21, 4.93)}
+LAT = 0
+LON = 1
+PRIORITY = 2
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -59,7 +67,35 @@ def permutations(p):
 #narrow down to top (10?) possible routes which minimize geographic distance,
 #then run through get min cost
 
-def get_min_cost(times, delimiter = None):
+
+def prelim_sort(places, labels, accuracy_degree = 3):
+    '''
+    Provides a preliminary ranking of node routes based on geographic distance.
+    Inputs:
+        places: dict
+        labels: list of string
+        accuracy_degree: int (optional, deefaults to 3) 
+    '''
+    labels = list(places.keys())
+    running_order = permutations(labels)
+    rv = []
+    for element in running_order:
+        running_distance = 0
+        for i in range(len(element) - 1):
+            id_0 = element[i]
+            id_1 = element[i + 1]
+            lon_0 = places[id_0][LON]
+            lat_0 = places[id_0][LAT]
+            lon_1 = places[id_1][LON]
+            lat_1 = places[id_1][LAT]
+            distance = haversine(lon_0, lat_0 , lon_1, lat_1)
+            running_distance += distance
+        rv.append((distance, element))
+    rv = sorted(rv)
+    rv = [i[1] for i in rv]
+    return rv[:accuracy_degree]
+
+def get_min_cost(ordered_routes, delimiter = None):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -68,20 +104,20 @@ def get_min_cost(times, delimiter = None):
         delimiter: integer (optional)
     Return: list of strings, integer
     '''
-    labels = list(times.keys())
+    
     if delimiter:
-        labels = labels[:delimiter + 1]
-    possibilities = permutations(labels)
+        ordered_routes = ordered_routes[:delimiter + 1]
     optimal = None
     best_cost = 99999
     
-    for choice in possibilities:
+    for choice in ordered_routes:
         cost = 0
         node = choice[:]
         while len(node) > 1:
             begin = node[0]
             end = node[1]
-            cost += times[begin][end]
+            #implement call to get transit times here
+            #cost += places[begin][end]
             del node[0]
 
         if cost < best_cost:
@@ -90,21 +126,25 @@ def get_min_cost(times, delimiter = None):
          
     return optimal, best_cost
 
-def optomize(times, max_time, return_delimiter = False):
+
+def optomize(places, max_cost, return_delimiter = False):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
     Inputs:
-        times: dict
+        places: dict
         max_time: int
         return_delimiter: bool
     Returns: list of strings, integer, (integer)
     '''
+    labels = list(places.keys())
+    running_order = permutations(labels)
+    places = prelim_sort(places, running_order)
     time, delimiter, route = 0, 3, []
-    num_nodes = len(times.keys())
-    while time <= max_time and delimiter <= num_nodes:
+    num_nodes = len(places)
+    while time <= max_cost and delimiter <= num_nodes:
         prev_route, prev_time = route, time
-        route, time = get_min_cost(times, delimiter)
+        route, time = get_min_cost(places, delimiter)
         delimiter += 1
     
     if prev_route == []: return False
@@ -119,7 +159,7 @@ if __name__ == '__main__':
     
     begin_time = time.clock()
 
-    print(optomize(times, 21, True))
+    #print(optomize(times, 21, True))
 
     end_time = time.clock()
     duration = end_time - begin_time
