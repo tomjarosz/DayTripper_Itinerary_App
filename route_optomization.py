@@ -63,10 +63,6 @@ def permutations(p):
                 rv.append([x] + perm)
     return rv
 
-#intermediate step before running get_min_cost: run through all permutations,
-#narrow down to top (10?) possible routes which minimize geographic distance,
-#then run through get min cost
-
 
 def prelim_sort(places, labels, accuracy_degree = 3):
     '''
@@ -76,7 +72,7 @@ def prelim_sort(places, labels, accuracy_degree = 3):
         labels: list of string
         accuracy_degree: int (optional, deefaults to 3) 
     '''
-    labels = list(places.keys())
+
     running_order = permutations(labels)
     rv = []
     for element in running_order:
