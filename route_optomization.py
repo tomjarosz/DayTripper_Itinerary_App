@@ -3,23 +3,12 @@ from math import radians, cos, sin, asin, sqrt
 from query_google import helper_transit_time
 
 
-#Currently this system is 'static' in the sense that there is 
-#only one transit time between any two points A and B no matter the
-#time of day(using the dictionary data structure directly below. 
-#As was pointed out during our presentation, that's not
-#the most accurate way to do it, so we could improve by using a function
-#which takes the unique string of place A, unique string of place B and time
-#of day, and returns transit time.
-
-#Data structure needed for this file: objects containing unique ID for each place,
-#along with lat/long, and a priority
-#
-#Example:
-places_dict = {'a': (-54.87, 112.12, 2.79),
-            'b': (-55.37, 112.89, 3.56),
-            'c': (-58.62, 112.45, 3.98),
-            'd': (-52.39, 112.08, 4.07),
-            'e': (-50.99, 112.21, 4.93)}
+#Example data structure for this file:
+places_dict = {'ChIJp2E8Hb8sDogR8WK83agX6c4': (41.8789, -87.6359, 2.79, time_open, time_close), # willis tower
+            'ChIJB5o6CWvTD4gR25QC-QbMQAk': (41.9211, -87.6340, 3.56, time_open, time_close), #lincoln park zoo
+            'ChIJHd8BYAopDogRBuMXc6oszA8': (41.7923, -87.5804, 3.98, time_open, time_close), #MSI
+            'ChIJ9ZKOJxQsDogRuJBKj2ZPhi8': (41.8299, -87.6338, 4.07, time_open, time_close), #White Sox Field
+            'ChIJId-a5bLTD4gRRtbdduE-6hw': (41.9484, -87.6553, 4.93, time_open, time_close)} #Wrigley Field
 LAT = 0
 LON = 1
 PRIORITY = 2
@@ -64,7 +53,7 @@ def permutations(p):
     return rv
 
 
-def prelim_sort(places, labels, accuracy_degree = 3):
+def prelim_sort(places, running_order, accuracy_degree = 3):
     '''
     Provides a preliminary ranking of node routes based on geographic distance.
     Inputs:
@@ -73,9 +62,10 @@ def prelim_sort(places, labels, accuracy_degree = 3):
         accuracy_degree: int (optional, deefaults to 3) 
     '''
 
-    running_order = permutations(labels)
+    #running_order = permutations(labels)
     rv = []
     for element in running_order:
+        print(element)
         running_distance = 0
         for i in range(len(element) - 1):
             id_0 = element[i]
@@ -113,7 +103,7 @@ def get_min_cost(ordered_routes, delimiter = None):
             begin = node[0]
             end = node[1]
             #implement call to get transit times here
-            #cost += places[begin][end]
+            cost += helper_transit_time(begin, end)
             del node[0]
 
         if cost < best_cost:
@@ -155,7 +145,8 @@ if __name__ == '__main__':
     
     begin_time = time.clock()
 
-    #print(optomize(times, 21, True))
+    #rv = optomize(places_dict, 300, True)
+    #print(rv)
 
     end_time = time.clock()
     duration = end_time - begin_time
