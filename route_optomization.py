@@ -1,6 +1,7 @@
 import time
 from math import radians, cos, sin, asin, sqrt
 from transit_time import helper_transit_time
+import datetime
 
 
 #Example data structure for this file:
@@ -11,7 +12,7 @@ places_dict = {'ChIJp2E8Hb8sDogR8WK83agX6c4': (41.8789, -87.6359, 2.79, 800, 150
             'ChIJ9ZKOJxQsDogRuJBKj2ZPhi8': (41.8299, -87.6338, 4.07, 1300, 2330, 135, 13), #White Sox Field
             'ChIJId-a5bLTD4gRRtbdduE-6hw': (41.9484, -87.6553, 4.93, 1145, 1745, 80, 31)} #Wrigley Field
 
-LAT, LON, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
+LAT, LONG, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -67,9 +68,9 @@ def prelim_geo_sort(places_dict, running_order, accuracy_degree = 2):
         for i in range(len(element) - 1):
             id_0 = element[i]
             id_1 = element[i + 1]
-            lon_0 = places_dict[id_0][LON]
+            lon_0 = places_dict[id_0][LONG]
             lat_0 = places_dict[id_0][LAT]
-            lon_1 = places_dict[id_1][LON]
+            lon_1 = places_dict[id_1][LONG]
             lat_1 = places_dict[id_1][LAT]
             distance = haversine(lon_0, lat_0 , lon_1, lat_1)
             running_distance += distance
@@ -79,15 +80,17 @@ def prelim_geo_sort(places_dict, running_order, accuracy_degree = 2):
     return rv[:accuracy_degree]
 
 
-def get_min_cost(ordered_routes, begin_time, end_time, num_included_places):
+def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seconds_from_epoch):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
     Input:
-        ordered_routes: dict
+        ordered_routes: list of list of strings
         begin_time: integer
         end_time: integer
-    Return: list of strings, integer
+        num_included_places: integer
+        seconds_from_epoch: integer
+    Return: list of strings, integer, int/None
     '''
 
     optimal = None
@@ -116,7 +119,15 @@ def get_min_cost(ordered_routes, begin_time, end_time, num_included_places):
             else:
                 priority_score += .5 * places_dict[begin][PRIORITY]
             #add parameters w/ respect to current time, day 
-            time += helper_transit_time(begin, end)
+            epoch_time = seconds_from_epoch + time * 60
+            transit_seconds = helper_transit_time(places_dict[begin][LAT],
+                                                  places_dict[begin][LONG],
+                                                  places_dict[end][LAT],
+                                                  places_dict[end][LONG],
+                                                  epoch_time)
+            print('transit seconds*******', transit_seconds)
+            print(type(transit_seconds))
+            time += transit_seconds / 60
             #time += places_dict[begin][TEMP_TIME] #temp, to avoid using google API too much
             del node[0]
 
@@ -146,7 +157,7 @@ def optomize(places_dict, begin_time, end_time, date = None):
         places_dict: dict
         begin_time: int
         end_time: int
-        date: string
+        date: tuple of ints (yyyy, mm, dd)
     Returns: list of strings, integer, (integer)
     '''
     labels = list(places_dict.keys())
@@ -155,8 +166,16 @@ def optomize(places_dict, begin_time, end_time, date = None):
     route = []
     time = 99999999
     num_included_places = len(labels)
+    epoch_datetime = datetime.datetime(1960,1,1)
+    begin_run_datetime = datetime.datetime(date[0], date[1], date[2])
+    seconds_from_epoch = (begin_run_datetime - epoch_datetime).days * 86400
+
     while time > end_time and num_included_places > 3:
-        route, time, priority_score = get_min_cost(updated_places, begin_time, end_time, num_included_places)
+        route, time, priority_score = get_min_cost(updated_places, 
+                                                   begin_time, 
+                                                   end_time, 
+                                                   num_included_places,
+                                                   seconds_from_epoch)
         num_included_places -= 1
     
 
