@@ -1,6 +1,6 @@
 import time
 from math import radians, cos, sin, asin, sqrt
-from query_google import helper_transit_time
+from transit_time import helper_transit_time
 
 
 #Example data structure for this file:
