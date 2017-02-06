@@ -124,9 +124,8 @@ def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seco
                                                   places_dict[begin][LONG],
                                                   places_dict[end][LAT],
                                                   places_dict[end][LONG],
-                                                  epoch_time)
-            print('transit seconds*******', transit_seconds)
-            print(type(transit_seconds))
+                                                  int(epoch_time))
+
             time += transit_seconds / 60
             #time += places_dict[begin][TEMP_TIME] #temp, to avoid using google API too much
             del node[0]
@@ -144,9 +143,8 @@ def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seco
         return optimal, time, None
     else:
         failed_all_open = sorted(failed_all_open, key = lambda x: (x[0], x[2]))
-        #print(failed_all_open[0])
         return failed_all_open[0][1], failed_all_open[0][2], failed_all_open[0][0]
-        #return failed_all_open[0][1], failed_all_open[0][2], failed_all_open[0][0]
+        
 
 
 def optomize(places_dict, begin_time, end_time, date = None):
@@ -185,7 +183,7 @@ if __name__ == '__main__':
     
     begin_time = time.clock()
 
-    rv = optomize(places_dict, 6*60,21*60, (2017,2,5))
+    rv = optomize(places_dict, 9*60,20*60, (2017,2,5))
     print(rv)
 
     end_time = time.clock()
