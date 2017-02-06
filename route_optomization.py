@@ -185,8 +185,8 @@ if __name__ == '__main__':
     
     begin_time = time.clock()
 
-    #rv = optomize(places_dict, 300, True)
-    #print(rv)
+    rv = optomize(places_dict, 6*60,21*60, (2017,2,5))
+    print(rv)
 
     end_time = time.clock()
     duration = end_time - begin_time
