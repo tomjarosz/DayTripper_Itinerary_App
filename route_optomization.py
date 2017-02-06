@@ -162,13 +162,13 @@ def optomize(places_dict, begin_time, end_time, date = None):
     running_order = permutations(labels)
     updated_places = prelim_geo_sort(places_dict, running_order)
     route = []
-    time = 99999999
+    time = -1
     num_included_places = len(labels)
     epoch_datetime = datetime.datetime(1960,1,1)
     begin_run_datetime = datetime.datetime(date[0], date[1], date[2])
     seconds_from_epoch = (begin_run_datetime - epoch_datetime).days * 86400
 
-    while time > end_time and num_included_places > 3:
+    while time < end_time and num_included_places > 3:
         route, time, priority_score = get_min_cost(updated_places, 
                                                    begin_time, 
                                                    end_time, 
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     
     begin_time = time.clock()
 
-    rv = optomize(places_dict, 9*60,20*60, (2017,2,5))
+    rv = optomize(places_dict, 13*60,20*60, (2017,2,5))
     print(rv)
 
     end_time = time.clock()
