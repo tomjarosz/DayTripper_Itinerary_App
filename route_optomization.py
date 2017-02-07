@@ -4,6 +4,11 @@ from transit_time import helper_transit_time
 import datetime
 
 
+#make a data structure for this info
+
+#calculate average time spent at locations from google places/info
+
+
 #Example data structure for this file:
 #Format of each dict entry- id: lon, lat, rating, open_time, close_time, avg_time, temp_dummy for testing
 places_dict = {'ChIJp2E8Hb8sDogR8WK83agX6c4': (41.8789, -87.6359, 2.79, 800, 1500,10, 20), # willis tower
@@ -13,6 +18,22 @@ places_dict = {'ChIJp2E8Hb8sDogR8WK83agX6c4': (41.8789, -87.6359, 2.79, 800, 150
             'ChIJId-a5bLTD4gRRtbdduE-6hw': (41.9484, -87.6553, 4.93, 1145, 1745, 80, 31)} #Wrigley Field
 
 LAT, LONG, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
+
+
+#data structure for places
+class Place(object):
+    CAT_TO_TIME = {'a':60,'b':90,'c':120,'d':180}
+    def __init__(self, place_id, lat, lon, open_time, close_time, rating, category):
+        self.place_id = place_id
+        self.lat = lat
+        self.lon = lon
+        self.open_time = (open_time / 100) * 60
+        self.close_time = (close_time / 100) * 60
+        self.rating = rating
+        self.category = category #main category, so I can map it to average time
+
+    def avg_time_spent(self):
+        return CAT_TO_TIME[self.category]
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -34,7 +55,7 @@ def haversine(lon1, lat1, lon2, lat2):
     m = km * 1000
     return m 
 
-
+#consider building a way for user to select where they start (one of the locations)
 def permutations(p):
     '''
     Given a list of characters, find every combination.
@@ -180,7 +201,7 @@ def optomize(places_dict, begin_time, end_time, date = None):
     return route, time
 
 if __name__ == '__main__':
-    
+ 
     begin_time = time.clock()
 
     rv = optomize(places_dict, 13*60,20*60, (2017,2,5))
