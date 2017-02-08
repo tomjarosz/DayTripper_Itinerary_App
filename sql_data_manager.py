@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
     c.execute('''DROP TABLE IF EXISTS gps_cities''')
     c.execute('''DROP TABLE IF EXISTS places''')
+    c.execute('''DROP TABLE IF EXISTS hours''')
         
     c.execute('''
         CREATE TABLE IF NOT EXISTS gps_cities
@@ -28,27 +29,45 @@ if __name__ == '__main__':
         address VARCHAR(50), 
         place_lat INT, 
         place_lng INT, 
-        postal_code,
+        postal_code INT,
         state VARCHAR(50), 
         country VARCHAR(50), 
         categories VARCHAR(50), 
         rating INT, 
-        mon_open INT, 
-        mon_close INT, 
-        tues_open INT, 
-        tues_close INT, 
-        wed_open INT, 
-        wed_close INT, 
-        thur_open INT,
-        thur_close INT, 
-        fri_open INT, 
-        fri_close INT, 
-        sat_open INT, 
-        sat_close INT, 
-        sun_open INT,
-        sun_close INT,
         PRIMARY KEY (place_id));''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS hours
+        (place_id VARCHAR(50),
+        mon_open1 INT, 
+        mon_close1 INT, 
+        mon_open2 INT, 
+        mon_close_2 INT,
+        tues_open1 INT,
+        tues_close1 INT,
+        tues_open2 INT,
+        tues_close2 INT,
+        wed_open1 INT,
+        wed_close1 INT,
+        wed_open2 INT,
+        wed_close2 INT,
+        thur_open1 INT,
+        thur_close1 INT,
+        thur_open2 INT,
+        thur_close2 INT,
+        fri_open1 INT,
+        fri_close1 INT,
+        fri_open2 INT,
+        fri_close2 INT,
+        sat_open1 INT,
+        sat_close1 INT,
+        sat_open2 INT,
+        sat_close2 INT,
+        sun_open1 INT,
+        sun_close1 INT,
+        sun_open2 INT,
+        sun_close_2 INT,
+        PRIMARY KEY (place_id));''')
 
     c.close()
     sql_db.close()
