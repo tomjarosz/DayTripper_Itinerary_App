@@ -183,11 +183,11 @@ def retrieve_transit_time(begin, end, seconds_from_epoch, time, past_transit_tim
     epoch_time = seconds_from_epoch + time * 60
     if time > FIRST_BIN and time <= SECOND_BIN:
         section = 'morning_commute'
-    if time > SECOND_BIN and time <= THIRD_BIN:
+    elif time > SECOND_BIN and time <= THIRD_BIN:
         section = 'mid_day'
-    if time > THIRD_BIN and time <= FOURTH_BIN:
+    elif time > THIRD_BIN and time <= FOURTH_BIN:
         section = 'evening_commute'
-    if time >= FOURTH_BIN or time <= FIRST_BIN:
+    else:
         section = 'non_peak'
     
     begin_id = begin.place_id()
