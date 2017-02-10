@@ -268,6 +268,14 @@ origin=place_id:{p_a}&destination=place_id:{p_b}&key={key}'.format(
 
     return time
 
+def helper_to_optimize(full_list_places):
+    
+    places_dict = {}
+    for place in full_list_places:
+        #places_dict[id] = (lat, lng, rating, open1, close1, open2, close2)
+        places_dict[place[0]] = (place[3], place[4], place[-5], place[-4], place[-3], place[-2], place[-1])
+
+    return places_dict
 
 if __name__ == '__main__':
 
@@ -279,5 +287,10 @@ if __name__ == '__main__':
                             '4bf58dd8d48988d17b941735','4bf58dd8d48988d130941735'],
                   'mode_transporation': 'walking'}
     
+    #send top k to the user:
     full_list_places = places_from_dict(param_dict)
-    print(full_list_places)
+
+    #get these back from the user and send them to optimize:
+    to_optimize = helper_to_optimize(full_list_places)
+
+    print(to_optimize)
