@@ -32,35 +32,36 @@ def places_from_dict(search_params_ui):
     c = sql_db.cursor()
     
     #1. Check if we have info for that city
-    # c.execute('''
-    #           SELECT place_id, name, address, place_lat, place_lng, postal_code, state, 
-    #           country, categories, rating, 
-              #   mon_open1, mon_close1, mon_open2, mon_close_2,
-              # tues_open1, tues_close1, tues_open2, tues_close2,
-              # wed_open1, wed_close1, wed_open2, wed_close2,
-              # thur_open1, thur_close1, thur_open2, thur_close2,
-              # fri_open1, fri_close1, fri_open2, fri_close2, 
-              # sat_open1, sat_close1, sat_open2, sat_close2,
-              # sun_open1, sun_close1, sun_open2, sun_close_2
-                # FROM places WHERE city_id = ? AND 
-                # DATE(date_update) > DATE('now','-6days')''', [city])
+    c.execute('''
+              SELECT place_id, name, address, place_lat, place_lng, postal_code, state, 
+              country, categories, rating, 
+                mon_open1, mon_close1, mon_open2, mon_close_2,
+              tues_open1, tues_close1, tues_open2, tues_close2,
+              wed_open1, wed_close1, wed_open2, wed_close2,
+              thur_open1, thur_close1, thur_open2, thur_close2,
+              fri_open1, fri_close1, fri_open2, fri_close2, 
+              sat_open1, sat_close1, sat_open2, sat_close2,
+              sun_open1, sun_close1, sun_open2, sun_close_2
+                FROM places WHERE city_id = ? AND 
+                DATE(date_update) > DATE('now','-6days')''', [city])
 
-    # data = c.fetchall()
-    # if data:
-    #     #here we should return data filtered for user_types
-    #     return data
+    data = c.fetchall()
+    if data:
+        #here we should return data filtered for user_types
+        return data
 
     all_categories = get_categories()
+    counter = 0
     for category in all_categories:
         query = 'https://api.foursquare.com/v2/venues/search?near={city}&categoryId={category}&limit=50&radius=10000&intent=browse&v=20170202&client_secret={client_secret}&client_id={client_id}'.format(
                 city=city,category=category,client_secret=CLIENT_SECRET, client_id=CLIENT_ID)   
 
+        print("HERE'S THE NEW CATEGORY!: " + category)
         # print(query)
-        # break 
         places = requests.get(query)
         json_data = json.loads(places.text)
 
-        for place in json_data['response']['venues']:
+        for place in json_data['response']['venues'][:10]:
             place_id = get_place_info('id', place)    
             name = get_place_info('name', place)
             address = get_place_info('address', place['location'])
@@ -76,7 +77,8 @@ def places_from_dict(search_params_ui):
             #Query individual locations to get other category classification, rating, hours       
             place_query = 'https://api.foursquare.com/v2/venues/{id}/?&intent=browse&v=20170202&client_secret={client_secret}&client_id={client_id}'.format(
             id=place_id, client_secret=CLIENT_SECRET, client_id=CLIENT_ID)
-            #return place_query 
+            print("         "+name)
+            # print(place_query) 
 
             places = requests.get(place_query)
             place_json_data = json.loads(places.text)
@@ -87,48 +89,44 @@ def places_from_dict(search_params_ui):
                 categories.append(category['id'])
             categories = ','.join(categories)
 
-            rating = place_json_data['response']['venue']['rating']
-
+            rating = get_place_info('rating', place_json_data['response']['venue'])
+     
             # return categories, rating
 
             hours_query = 'https://api.foursquare.com/v2/venues/{id}/hours/?&intent=browse&v=20170202&client_secret={client_secret}&client_id={client_id}'.format(
             id=place_id, client_secret=CLIENT_SECRET, client_id=CLIENT_ID) 
 
-            # return hours_query 
+            # print(hours_query)
 
             oper_hours = get_hours(hours_query)
-            mon_open_1 = oper_hours[0]
-            mon_close_1 = oper_hours[1]
-            mon_open_2 = oper_hours[2]
-            mon_close_2 = oper_hours[3]
-            tues_open_1 = oper_hours[4]
-            tues_close_1 = oper_hours[5]
-            tues_open_2 = oper_hours[6]
-            tues_close_2 = oper_hours[7]
-            wed_open_1 = oper_hours[8]
-            wed_close_1 = oper_hours[9]
-            wed_open_2 = oper_hours[10]
-            wed_close_2 = oper_hours[11]
-            thur_open_1 = oper_hours[12]
-            thur_close_1 = oper_hours[13]
-            thur_open_2 = oper_hours[14]
-            thur_close_2 = oper_hours[15]
-            fri_open_1 = oper_hours[16]
-            fri_close_1 = oper_hours[17]
-            fri_open_2 = oper_hours[18]
-            fri_close_2 = oper_hours[19]
-            sat_open_1 = oper_hours[20]
-            sat_close_1 = oper_hours[21]
-            sat_open_2 = oper_hours[22]
-            sat_close_2 = oper_hours[23]
-            sun_open_1 = oper_hours[24]
-            sun_close_1 = oper_hours[25]
-            sun_open_2 = oper_hours[26]
-            sun_close_2 = oper_hours[27]
-
-            #return mon_open_1
-            return thur_open_2
-            # return mon_open
+            mon_open1 = oper_hours[0]
+            mon_close1 = oper_hours[1]
+            mon_open2 = oper_hours[2]
+            mon_close2 = oper_hours[3]
+            tues_open1 = oper_hours[4]
+            tues_close1 = oper_hours[5]
+            tues_open2 = oper_hours[6]
+            tues_close2 = oper_hours[7]
+            wed_open1 = oper_hours[8]
+            wed_close1 = oper_hours[9]
+            wed_open2 = oper_hours[10]
+            wed_close2 = oper_hours[11]
+            thur_open1 = oper_hours[12]
+            thur_close1 = oper_hours[13]
+            thur_open2 = oper_hours[14]
+            thur_close2 = oper_hours[15]
+            fri_open1 = oper_hours[16]
+            fri_close1 = oper_hours[17]
+            fri_open2 = oper_hours[18]
+            fri_close2 = oper_hours[19]
+            sat_open1 = oper_hours[20]
+            sat_close1 = oper_hours[21]
+            sat_open2 = oper_hours[22]
+            sat_close2 = oper_hours[23]
+            sun_open1 = oper_hours[24]
+            sun_close1 = oper_hours[25]
+            sun_open2 = oper_hours[26]
+            sun_close2 = oper_hours[27]
 
             c.execute('''
                       REPLACE INTO places VALUES (date('now'),?,?,?,?,?,?,?,?,?,?,?)
@@ -138,37 +136,40 @@ def places_from_dict(search_params_ui):
             sql_db.commit()
 
             c.execute('''
-                      REPLACE INTO hours VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                      REPLACE INTO hours VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                       ''', 
                       (place_id, 
-                       mon_open1, mon_close1, mon_open2, mon_close_2,
+                       mon_open1, mon_close1, mon_open2, mon_close2,
                        tues_open1, tues_close1, tues_open2, tues_close2,
                        wed_open1, wed_close1, wed_open2, wed_close2,
                        thur_open1, thur_close1, thur_open2, thur_close2,
                        fri_open1, fri_close1, fri_open2, fri_close2, 
                        sat_open1, sat_close1, sat_open2, sat_close2,
-                       sun_open1, sun_close1, sun_open2, sun_close_2))
+                       sun_open1, sun_close1, sun_open2, sun_close2))
             sql_db.commit()
+            counter += 1
+
+    print(counter)
+
+            
 
     num_user_categories = len(search_params_ui['types'])
     num_categories = ','.join(['?']*len(search_params_ui['types']))
-    return num_categories
-            ##match on city-id and type_categoiry input
+    search_categories = search_params_ui['types']
+    # print(search_categories)
+    # print(num_user_categories)
+    # print(num_categories)
+    
+
+    ##match on city-id and type_categoiry input
     c.execute('''
               SELECT place_id, name, address, place_lat, place_lng, postal_code, state, 
               country, categories, rating, 
-              mon_open1, mon_close1, mon_open2, mon_close_2,
-              tues_open1, tues_close1, tues_open2, tues_close2,
-              wed_open1, wed_close1, wed_open2, wed_close2,
-              thur_open1, thur_close1, thur_open2, thur_close2,
-              fri_open1, fri_close1, fri_open2, fri_close2, 
-              sat_open1, sat_close1, sat_open2, sat_close2,
-              sun_open1, sun_close1, sun_open2, sun_close_2 
+              
                 FROM places 
                 WHERE city_id = ?
-                AND categories in ({})'''.format(num_categories)
-                , (search_params_ui, [city]))
-
+                AND categories in ({})'''
+                )
 
     data = c.fetchall()
     
@@ -195,34 +196,36 @@ def get_hours(hours_query):
                  '6_open1','6_close1','6_open2','6_close2', 
                  '7_open1','7_close1','7_open2','7_close2']
 
-    timeframe = json_data['response']['popular']['timeframes']
-    for days in timeframe:
-        if len(days['open']) > 0:
-            if len(days['open']) == 1:
-                for day in days['days']:
-                    current_open = str(day) +'_open1'
-                    current_close = str(day) + '_close1'
-                    current_open_hour = int(days['open'][0]['start'])
-                    current_close_hour = int(days['open'][0]['end'])
 
-                    hour_list = [current_open_hour if x==current_open else x for x in hour_list]
-                    hour_list = [current_close_hour if x==current_close else x for x in hour_list]
+    if 'timeframes' in json_data['response']['popular']:
+        timeframe = json_data['response']['popular']['timeframes']
+        for days in timeframe:
+            if len(days['open']) > 0:
+                if len(days['open']) == 1:
+                    for day in days['days']:
+                        current_open = str(day) +'_open1'
+                        current_close = str(day) + '_close1'
+                        current_open_hour = int(days['open'][0]['start'])
+                        current_close_hour = int(days['open'][0]['end'])
 
-            if len(days['open']) == 2:
-                for day in days['days']:
-                    counter = 1
-                    for hour in days['open']:
-                        current_open = str(day) +'_open' + str(counter)
-                        current_close = str(day) + '_close' + str(counter)
-                        current_open_hour = int(hour['start'])
-                        current_close_hour = int(hour['end'])
-                        counter += 1
-                        
                         hour_list = [current_open_hour if x==current_open else x for x in hour_list]
                         hour_list = [current_close_hour if x==current_close else x for x in hour_list]
 
-    hour_list = ['' if type(x) != int else x for x in hour_list]
+                if len(days['open']) == 2:
+                    for day in days['days']:
+                        counter = 1
+                        for hour in days['open']:
+                            current_open = str(day) +'_open' + str(counter)
+                            current_close = str(day) + '_close' + str(counter)
+                            current_open_hour = int(hour['start'])
+                            current_close_hour = int(hour['end'])
+                            counter += 1
+                            
+                            hour_list = [current_open_hour if x==current_open else x for x in hour_list]
+                            hour_list = [current_close_hour if x==current_close else x for x in hour_list]
+
     
+    hour_list = ['' if type(x) != int else x for x in hour_list]
     return hour_list
 
 
@@ -313,7 +316,7 @@ origin=place_id:{p_a}&destination=place_id:{p_b}&key={key}'.format(
 if __name__ == '__main__':
 
     # User enters parameters and process starts
-    param_dict = {'city': 'memphis', 
+    param_dict = {'city': 'washington, dc', 
                   'date': '11/11/2017',
                   'time_start': 1100,
                   'time_end' : 1300,
