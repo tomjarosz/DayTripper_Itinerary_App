@@ -23,17 +23,26 @@ LAT, LONG, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
 #data structure for places
 class Place(object):
     CAT_TO_TIME = {'a':60,'b':90,'c':120,'d':180}
-    def __init__(self, place_id, lat, lon, open_time, close_time, rating, category):
+    def __init__(self, place_id, lat, lon, open_time=None, close_time=None, rating=None, category=None):
         self.place_id = place_id
         self.lat = lat
         self.lon = lon
-        self.open_time = (open_time / 100) * 60
-        self.close_time = (close_time / 100) * 60
+        if open_time:
+            self.open_time = (open_time / 100) * 60
+        else:
+            self.open_time = None
+        if close_time:
+            self.close_time = (close_time / 100) * 60
+        else:
+            self.close_time = None
         self.rating = rating
         self.category = category #main category, so I can map it to average time
 
     def avg_time_spent(self):
         return CAT_TO_TIME[self.category]
+
+    def __repr__(self):
+        return str(place_id)
 
 
 def haversine(lon1, lat1, lon2, lat2):
