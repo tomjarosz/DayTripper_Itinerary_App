@@ -4,10 +4,6 @@ from transit_time import helper_transit_time
 import datetime
 
 
-#make a data structure for this info
-
-#calculate average time spent at locations from google places/info
-
 
 #Example data structure for this file:
 #Format of each dict entry- id: lon, lat, rating, open_time, close_time, avg_time, temp_dummy for testing
@@ -16,6 +12,38 @@ places_dict = {'ChIJp2E8Hb8sDogR8WK83agX6c4': (41.8789, -87.6359, 2.79, 800, 150
             'ChIJHd8BYAopDogRBuMXc6oszA8': (41.7923, -87.5804, 3.98, 730, 2000, 75, 14), #MSI
             'ChIJ9ZKOJxQsDogRuJBKj2ZPhi8': (41.8299, -87.6338, 4.07, 1300, 2330, 135, 13), #White Sox Field
             'ChIJId-a5bLTD4gRRtbdduE-6hw': (41.9484, -87.6553, 4.93, 1145, 1745, 80, 31)} #Wrigley Field
+
+
+TIME_SPENT = {'50aaa49e4b90af0d42d5de11' : 150,
+              '4bf58dd8d48988d15d941735' : 45,
+              '52e81612bcbc57f1066b7a14' : 150,
+              '4bf58dd8d48988d130941735' : 90,
+              '4deefb944765f83613cdba6e' : 60,
+              '5744ccdfe4b0c0459246b4d9' : 30,
+              '4bf58dd8d48988d1e2931735' : 150,
+              '56aa371be4b08b9a8d573532' : 60,
+              '4bf58dd8d48988d181941735' : 150,
+              '507c8c4091d498d9fc8c67a9' : 30,
+              '4bf58dd8d48988d166941735' : 40,
+              '52e81612bcbc57f1066b7a32' : 60,
+              '4bf58dd8d48988d12f941735' : 30,
+              '52e81612bcbc57f1066b7a22' : 90,
+              '4bf58dd8d48988d163941735' : 110,
+              '4bf58dd8d48988d165941735' : 20,
+              '5642206c498e4bfca532186c' : 60,
+              '4bf58dd8d48988d15c941735' : 50,
+              '5310b8e5bcbc57f1066bcbf1' : 120,
+              '4e74f6cabd41c4836eac4c31' : 100,
+              '4bf58dd8d48988d1e0941735' : 120,
+              '4bf58dd8d48988d1e2941735' : 150,
+              '4eb1d4d54b900d56c88a45fc' : 120,
+              '52e81612bcbc57f1066b7a21' : 180,
+              '52e81612bcbc57f1066b7a13' : 170,
+              '4bf58dd8d48988d1e9941735' : 300,
+              '56aa371be4b08b9a8d573511' : 90,
+              '4bf58dd8d48988d15a941735' : 120
+}
+
 
 LAT, LONG, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
 
