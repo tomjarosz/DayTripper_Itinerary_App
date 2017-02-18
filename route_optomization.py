@@ -139,7 +139,7 @@ def prelim_geo_sort(places_dict, running_order, accuracy_degree = 2):
     return rv[:accuracy_degree]
 
 
-def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seconds_from_epoch, past_transit_times):
+def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seconds_from_epoch, past_transit_times, mode_of_transportation):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -181,7 +181,10 @@ def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seco
             #This line is currently depracated until Places object is fully implemented
             transit_seconds, past_transit_times = retrieve_transit_time(begin, end,
                                                                         seconds_from_epoch,
-                                                                        time, past_transit_times)
+                                                                        time, past_transit_times,
+                                                                        mode_of_transportation)
+            #if transit time too long and mode of transit not car, add tag to place_id here
+
             time += transit_seconds / 60
             #time += places_dict[begin][TEMP_TIME] #temp, to avoid using google API too much
             del node[0]
@@ -202,7 +205,7 @@ def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seco
         return failed_all_open[0][1], failed_all_open[0][2], failed_all_open[0][0], past_transit_times
         
 
-def retrieve_transit_time(begin, end, seconds_from_epoch, time, past_transit_times):
+def retrieve_transit_time(begin, end, seconds_from_epoch, time, past_transit_times, mode_of_transportation):
     '''
     Determines if the relevant transit calculation has been performed recently. If so,
     retrieves that. If not, queries Google Transit API.
@@ -245,7 +248,7 @@ def retrieve_transit_time(begin, end, seconds_from_epoch, time, past_transit_tim
     return rv
 
 
-def optomize(places_dict, begin_time, end_time, date = None, starting_location = None):
+def optomize(places_dict, begin_time, end_time, mode_of_transportation=None, date=None, starting_location=None):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -277,7 +280,7 @@ def optomize(places_dict, begin_time, end_time, date = None, starting_location =
                                                                        end_time, 
                                                                        num_included_places,
                                                                        seconds_from_epoch,
-                                                                       past_transit_times)
+                                                                       past_transit_times, mode_of_transportation)
         num_included_places -= 1
     
 
