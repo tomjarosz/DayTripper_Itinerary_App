@@ -2,6 +2,7 @@ import time
 from math import radians, cos, sin, asin, sqrt
 from transit_time import helper_transit_time
 import datetime
+from weather import *
 
 
 
