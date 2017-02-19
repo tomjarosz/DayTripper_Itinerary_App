@@ -1,0 +1,24 @@
+{% extends "itinerary/main_form.html" %}
+
+{% block title %}These are the first user results:
+
+    <form action="{% url 'itinerary:index' %}" method="get">
+    {% csrf_token %}
+    <input type='hidden' name='query_id_from_form' value='{{ query_id }}' />
+    
+    {% for place in lista %}
+        <p>
+        {{ place.name }} {{ place.checkins }} 
+        <select name="ur_{{ place.id_str }}">
+            <option value="up">Like it</option>
+            <option value="mid" selected="selected">Indiferent</option>
+            <option value="down">Don't like it</option>
+        </select>
+        </p>
+    {% endfor %}
+
+    <input type="submit" value="Send2" />
+    </form>
+
+This is the query id: {{ query_id }}
+{% endblock %}

@@ -1,0 +1,101 @@
+<head>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+  $( function() {
+    var availableTags = [
+    {% for city in cities %}
+       "{{ city.city_name }}, {{ city.country_name }}" ,
+    {% endfor %}
+    "I don't know"
+    ];
+    $( "#tags" ).autocomplete({
+      source: availableTags
+    });
+  } );
+  </script>
+    <script>
+  $( function() {
+    $( "#datepicker" ).datepicker();
+  } );
+  </script>
+  <style>
+  #slider-range{width:400px;}
+  </style>
+  <script>
+  $( function() {
+    $( "#slider-range" ).slider({
+      range: true,
+      min: 0,
+      max: 1439,
+      step: 15,
+      values: [540, 1080],
+      slide: function( event, ui ) {
+        var hours1 = Math.floor(ui.values[0] / 60);
+        var minutes1 = ui.values[0] - (hours1 * 60);
+
+        var hours2 = Math.floor(ui.values[1] / 60);
+        var minutes2 = ui.values[1] - (hours2 * 60);
+
+        if(hours1.toString().length == 1) hours1 = '0' + hours1;
+        if(minutes1.toString().length == 1) minutes1 = '0' + minutes1;
+
+        if(hours2.toString().length == 1) hours2 = '0' + hours2;
+        if(minutes2.toString().length == 1) minutes2 = '0' + minutes2;
+
+        $('#amount-time').val(hours1+':'+minutes1+' - '+hours2+':'+minutes2);
+      }
+    });
+      $( "#amount-time" ).val('09:00 - 18:00');
+  } );
+  </script>
+</head> 
+
+<h1><a href="http://127.0.0.1:8000/itinerary">Welcome to itinerary builder</a></h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'itinerary:index' %}" method="post">
+    {% csrf_token %}
+    <p>
+    City to visit:
+    <input id="tags" name="query_city">
+    </p>
+    <p>
+    Day of visit:
+    <input type="text" id="datepicker" name="arrival_date">
+    </p>
+    <p>
+    Start-end time:
+    <input type="text" id="amount-time" name="time_frame" readonly style="border:0; color:#000000;">
+    <div id="slider-range"></div>
+    </p>
+    <p>
+    Search by categories:
+    {% for category in categories %}
+    <input type="checkbox" name="cat{{ category.user_cat_id }}" value="{{ category.user_cat_id }}" /> {{ category.user_category }} 
+    {% endfor %}
+    </p>
+    <p>
+    Select mode of transportation:
+    <select name="mode_transportation">
+        <option value="any"></option>
+        <option value="driving">Driving</option>
+        <option value="walking">Walking</option>
+        <option value="bicycling">Bicycling</option>
+        <option value="transit">Public Trans.</option>
+    </select>
+    </p>
+
+ <br>
+    
+<input type="submit" value="Send" />
+<input type="reset">
+</form>
+ 
+
+{% block title %}
+    <hr>
+    <p>Thanks for visiting my site.</p>
+{% endblock %}

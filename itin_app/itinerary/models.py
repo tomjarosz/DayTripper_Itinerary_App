@@ -27,9 +27,13 @@ class Place(models.Model):
     def __str__(self):
         return str(self.id_str + self.name)
 
-    def is_open(self, dow, time):
-        #DETERMINES WHETHER A PLACE IS OOPEN
-        pass
+    def is_open_dow(self, dow):
+        return Place_hours.objects.filter(place_id=self.id_str, d_of_w_open=dow).exists()
+
+    def is_open_dow_time(self, dow, time):
+        data = Place_hours.objects.filter(place_id=self.id_str, d_of_w_open=dow, open_time__lte=time, close_time__gte=time)
+        print(data)
+        return data.exists()
 
 
 class Place_hours(models.Model):
@@ -61,6 +65,7 @@ class Category(models.Model):
     user_cat_id = models.IntegerField()
     name = models.CharField(max_length=200)
     fs_id = models.CharField(max_length=200)
+    avg_duration = models.IntegerField()
 
     def __str__(self):
         return str(self.user_category +', '+ self.name)
