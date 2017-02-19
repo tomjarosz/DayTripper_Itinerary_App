@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from datetime import datetime, time, timedelta
 from django.db.models import Count
-from route_optomization import *
+#from route_optomization import optomize_a
 
 from geopy.geocoders import Nominatim
 
@@ -10,6 +10,10 @@ from .models import Category, City, Place, Place_hours, UserQuery
 
 import json
 import requests
+
+from math import radians, cos, sin, asin, sqrt
+from transit_time import helper_transit_time
+from weather import *
 #from foursquare import places_from_dict
 
 def index(request):
@@ -302,3 +306,273 @@ def get_place_info(var_name, place_info):
     else:
         data = ''
     return data
+
+
+
+##from here down is the former 'route_optomization file, which has been moved to here. it is a WIP'
+
+TIME_SPENT = {'50aaa49e4b90af0d42d5de11' : 150,
+              '4bf58dd8d48988d15d941735' : 45,
+              '52e81612bcbc57f1066b7a14' : 150,
+              '4bf58dd8d48988d130941735' : 90,
+              '4deefb944765f83613cdba6e' : 60,
+              '5744ccdfe4b0c0459246b4d9' : 30,
+              '4bf58dd8d48988d1e2931735' : 150,
+              '56aa371be4b08b9a8d573532' : 60,
+              '4bf58dd8d48988d181941735' : 150,
+              '507c8c4091d498d9fc8c67a9' : 30,
+              '4bf58dd8d48988d166941735' : 40,
+              '52e81612bcbc57f1066b7a32' : 60,
+              '4bf58dd8d48988d12f941735' : 30,
+              '52e81612bcbc57f1066b7a22' : 90,
+              '4bf58dd8d48988d163941735' : 110,
+              '4bf58dd8d48988d165941735' : 20,
+              '5642206c498e4bfca532186c' : 60,
+              '4bf58dd8d48988d15c941735' : 50,
+              '5310b8e5bcbc57f1066bcbf1' : 120,
+              '4e74f6cabd41c4836eac4c31' : 100,
+              '4bf58dd8d48988d1e0941735' : 120,
+              '4bf58dd8d48988d1e2941735' : 150,
+              '4eb1d4d54b900d56c88a45fc' : 120,
+              '52e81612bcbc57f1066b7a21' : 180,
+              '52e81612bcbc57f1066b7a13' : 170,
+              '4bf58dd8d48988d1e9941735' : 300,
+              '56aa371be4b08b9a8d573511' : 90,
+              '4bf58dd8d48988d15a941735' : 120
+}
+
+
+LAT, LONG, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
+
+
+
+def haversine(lon1, lat1, lon2, lat2):
+    '''
+    Calculate the circle distance between two points 
+    on the earth (specified in decimal degrees)
+    '''
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+
+    # 6367 km is the radius of the Earth
+    km = 6367 * c
+    m = km * 1000
+    return m 
+
+#consider building a way for user to select where they start (one of the locations)
+def permutations(p):
+    '''
+    Given a list of characters, find every combination.
+    Input:
+        p: list of strings
+    Returns: list of strings
+    '''
+    if len(p) == 1:
+        return [p]
+    else:
+        rv = []
+        for x in p:
+            p_minus_x = [i for i in p if i != x]
+            perms = permutations(p_minus_x)
+            for perm in perms:
+                rv.append([x] + perm)
+    return rv
+
+
+def prelim_geo_sort(places_dict, running_order, user_query, accuracy_degree = 2):
+    '''
+    Provides a preliminary ranking of node routes based on geographic distance.
+    Inputs:
+        places: dict
+        labels: list of list of strings
+        accuracy_degree: int (optional, deefaults to 3) 
+    '''
+    rv = []
+    for element in running_order:
+        running_distance = 0
+        for i in range(len(element) - 1):
+            id_0 = element[i]
+            id_1 = element[i + 1]
+            if id_0 == 'starting_location':
+                lon_0 = user_query.start_lng
+                lat_0 = user_query.start_lat
+            else:    
+                lon_0 = places_dict[id_0][LONG]
+                lat_0 = places_dict[id_0][LAT]
+            lon_1 = places_dict[id_1][LONG]
+            lat_1 = places_dict[id_1][LAT]
+            distance = haversine(lon_0, lat_0 , lon_1, lat_1)
+            running_distance += distance
+        rv.append((distance, element))
+    rv = sorted(rv)
+    rv = [i[1] for i in rv]
+    return rv[:accuracy_degree]
+
+
+def get_min_cost(ordered_routes, begin_time, end_time, num_included_places, seconds_from_epoch, past_transit_times, mode_of_transportation):
+    '''
+    Calculates the minimum cost to pass through each node in a set
+    in any order.
+    Input:
+        ordered_routes: list of list of strings
+        begin_time: integer
+        end_time: integer
+        num_included_places: integer
+        seconds_from_epoch: integer
+        past_transit_times: dict
+    Return: list of strings, integer, int/None, dict
+    '''
+
+    #check if the starting location is reasonable
+    optimal = None
+    best_time = 999999
+    failed_all_open = []
+
+    for choice in ordered_routes:
+        choice = choice[:num_included_places + 1]
+        all_open = True
+        time = begin_time
+        node = choice[:]
+        priority_score = 0
+        while len(node) > 2:
+            begin = node[0]
+            end = node[1]
+            #If location isn't open at begining or end of projected time, this route has
+            #second class status. Builds priority score, a measure of how many desirable
+            #sites are open in this route, based on location ranking.
+            
+            #call to is open
+            #bool = place.is_open_dow_time(dow, time)
+            #dow from user_query, time in hh;mm format
+            if places_dict[begin][OPEN] > time:
+                all_open = False
+            else:
+                priority_score += .5 * places_dict[begin][PRIORITY]
+            time += places_dict[begin][DURATION]
+            if places_dict[begin][CLOSE] < time:
+                all_open = False
+            else:
+                priority_score += .5 * places_dict[begin][PRIORITY]
+            #This line is currently depracated until Places object is fully implemented
+            mode_of_transportation = user_query.mode_transportation
+            transit_seconds, past_transit_times = retrieve_transit_time(begin, end,
+                                                                        seconds_from_epoch,
+                                                                        time, past_transit_times,
+                                                                        mode_of_transportation)
+            #if transit time too long and mode of transit not car, add tag to place_id here
+
+            time += transit_seconds / 60
+            #time += places_dict[begin][TEMP_TIME] #temp, to avoid using google API too much
+            del node[0]
+
+
+        if time < best_time and all_open:
+            optimal = choice
+            best_time = time
+        else:
+            failed_all_open.append((priority_score, choice, time))
+      
+    #If there is at least one route with all locations open, return route 
+    #with best time. Else return route with top priority score.
+    if optimal != None:
+        return optimal, time, None, past_transit_times
+    else:
+        failed_all_open = sorted(failed_all_open, key = lambda x: (x[0], x[2]))
+        return failed_all_open[0][1], failed_all_open[0][2], failed_all_open[0][0], past_transit_times
+        
+
+def retrieve_transit_time(begin, end, seconds_from_epoch, time, past_transit_times, mode_of_transportation):
+    '''
+    Determines if the relevant transit calculation has been performed recently. If so,
+    retrieves that. If not, queries Google Transit API.
+    Inputs:
+        Begin: Place object
+        End: Place object
+    Returns: int
+    '''
+    #Hours of the day, in minutes
+    FIRST_BIN = 7 * 60
+    SECOND_BIN = 10 * 60
+    THIRD_BIN = 16 * 60
+    FOURTH_BIN = 21 * 60
+    
+    #determine which bin the current time fits in
+    epoch_time = seconds_from_epoch + time * 60
+    if time > FIRST_BIN and time <= SECOND_BIN:
+        section = 'morning_commute'
+    elif time > SECOND_BIN and time <= THIRD_BIN:
+        section = 'mid_day'
+    elif time > THIRD_BIN and time <= FOURTH_BIN:
+        section = 'evening_commute'
+    else:
+        section = 'non_peak'
+    
+    begin_id = begin.place_id()
+    end_id = end.place_id()
+
+    rv = past_transit_times.get(begin_id).get(end_id).get(section)
+    if not rv:
+        #this call will be replaced with the relevant place object code as soon as 
+        #that is implemented
+        rv = helper_transit_time(places_dict[begin][LAT],
+                                 places_dict[begin][LONG],
+                                 places_dict[end][LAT],
+                                 places_dict[end][LONG],
+                                 int(epoch_time))
+        past_transit_times[begin_id][end_id][section] = rv
+
+    return rv
+
+
+def optomize(user_query, places_dict, null=None):
+    '''
+    Determines how many nodes can be visited given upper cost
+    constraint.
+    Inputs:
+        places_dict: dict
+        begin_time: int
+        end_time: int
+        date: tuple of ints (yyyy, mm, dd)
+        starting_location: tuple containing long/lat/unique id
+    Returns: list of strings, integer, (integer)
+    '''
+    print('got to optomize',user_query)
+    end_time = user_query.time_end
+    labels = list(places_dict.keys())
+    if starting_location:
+        cit_lat = place.city.city_lat
+        cit_lon = place.city.city_lng
+        start_lat = user_query.start_lat
+        start_lon = user_query.start_lng
+        distance = haversine(start_lat, start_lon, cit_lat, cit_lon)
+        if distance < 10000:
+            labels.prepend('starting_location')
+    running_order = permutations(labels)
+    updated_places = prelim_geo_sort(places_dict, running_order)
+    route = []
+    time = -1
+    past_transit_times = {}
+    num_included_places = len(labels)
+    epoch_datetime = time.time()
+    begin_run_datetime = datetime.datetime(date[0], date[1], date[2])
+    seconds_from_epoch = (begin_run_datetime - epoch_datetime).days * 86400
+
+
+    while time < end_time and num_included_places > 3:
+        route, time, priority_score, past_transit_times = get_min_cost(updated_places, 
+                                                                       begin_time, 
+                                                                       end_time, 
+                                                                       num_included_places,
+                                                                       seconds_from_epoch,
+                                                                       past_transit_times, mode_of_transportation)
+        num_included_places -= 1
+    
+    #remember to strip starting location
+    #going to return two lists and an int: ordered places, list of transit exceptions, total transit time in mins
+    return 1,2,3
