@@ -4,7 +4,7 @@ import requests
 
 KEY = 'AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8'
 
-def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, departure_time=None):
+def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, departure_time=None, mode='driving'):
     '''
     FUNCTION TO GET TRANSIT TIME BETWEEN A AND B
 
@@ -18,16 +18,16 @@ def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, depa
         - time: time in seconds (int)
     '''
     if not departure_time:
-        query = 'https://maps.googleapis.com/maps/api/directions/json?'\
+        query = 'https://maps.googleapis.com/maps/api/directions/json?mode={mode}'\
                 'origin={lat_a},{lng_a}&destination={lat_b},{lng_b}&key={key}'.format(
                     lat_a=place_a_lat, lng_a=place_a_lng, lat_b=place_b_lat, 
-                    lng_b=place_b_lng, key=KEY)
+                    lng_b=place_b_lng, key=KEY, mode=mode)
     else:
-        query = 'https://maps.googleapis.com/maps/api/directions/json?'\
+        query = 'https://maps.googleapis.com/maps/api/directions/json?mode={mode}'\
                 'origin={lat_a},{lng_a}&destination={lat_b},{lng_b}&key={key}&'\
                 'departure_time={dtime}'.format(
                     lat_a=place_a_lat, lng_a=place_a_lng, lat_b=place_b_lat, 
-                    lng_b=place_b_lng, key=KEY, dtime=departure_time)
+                    lng_b=place_b_lng, key=KEY, dtime=departure_time, mode=mode)
 
     data_request = requests.get(query)
     

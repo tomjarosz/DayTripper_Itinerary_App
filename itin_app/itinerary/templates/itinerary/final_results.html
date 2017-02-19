@@ -1,3 +1,10 @@
 {% extends "itinerary/main_form.html" %}
 
-{% block title %}These are the final results{% endblock %}
+{% block title %}These are the final results
+    {% for place in final_places_list %}
+        <p>
+        {{ place.name }} {{ place.checkins }} 
+        </p>
+    {% endfor %}
+
+{% endblock %}
