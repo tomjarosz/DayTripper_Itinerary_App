@@ -56,6 +56,7 @@ def index(request):
                 id_place = key[3:]
                 places.append(Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'))
 
+        print(b)
 
         #places_list2 = route_optimization(user_query, places)
 
@@ -100,6 +101,13 @@ def helper_check_query(post_data):
     post_data['time_start'] = post_data['time_frame'][0].split(' - ')[0]
     post_data['time_end'] = post_data['time_frame'][0].split(' - ')[1]
 
+    if post_data['start_location'][0] == '':
+        pass
+    else:
+        pass
+    start_lat = 0
+    start_lng = 0
+    
     arrival_date = datetime.strptime(post_data.get('arrival_date')[0], r'%m/%d/%Y').date().strftime('%Y-%m-%d')
     
     user_query = UserQuery(
@@ -109,7 +117,10 @@ def helper_check_query(post_data):
         time_start = post_data.get('time_start'),
         time_end = post_data.get('time_end'),
         category_ids = categories,
-        mode_transportation = post_data.get('mode_transportation'))
+        mode_transportation = post_data.get('mode_transportation'), 
+        starting_location = post_data.get('start_location')[0],
+        start_lat = start_lat,
+        start_lng = start_lng)
 
     user_query.save()
 
