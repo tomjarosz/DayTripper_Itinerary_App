@@ -346,9 +346,6 @@ TIME_SPENT = {'50aaa49e4b90af0d42d5de11' : 150,
 }
 
 
-LAT, LONG, PRIORITY, OPEN, CLOSE, DURATION, TEMP_TIME = 0, 1, 2, 3, 4, 5, 6
-
-
 
 def haversine(lon1, lat1, lon2, lat2):
     '''
@@ -436,7 +433,8 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
     Return: list of strings, integer, int/None, dict
     '''
 
-
+    if not exceptions:
+        exceptions = []
     print('reached get_min_cost')
     optimal = None
     best_time = 999999
@@ -473,8 +471,29 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
                                                                         places_dict,
                                                                         mode_of_transportation)
             #if transit time too long and mode of transit not car, add tag to place_id here
+            #this part not finished
+            if transit_seconds > 2700 and user_query.mode_transportation != 'driving':
+                pass
+                if user_query.mode_transportation != 'transit':
+                    new_time = helper_transit_time(places_dict[begin_id][0].lat,
+                                                     places_dict[begin_id][0].lng,
+                                                     places_dict[end_id][0].lat,
+                                                     places_dict[end_id][0].lng,
+                                                     int(epoch_time),
+                                                     'transit')
+                else:
+                    new_time = transit_seconds
+                if new_time > .75 * transit_seconds:
+                    new_time = helper_transit_time(places_dict[begin_id][0].lat,
+                                                 places_dict[begin_id][0].lng,
+                                                 places_dict[end_id][0].lat,
+                                                 places_dict[end_id][0].lng,
+                                                 int(epoch_time),
+                                                 'driving')
+                if new_time < .5 * transit_seconds:
+                    exceptions.append((begin_id, end_id, (transit_seconds -  new_time) / 60))
+
             time += transit_seconds / 60
-            #time += places_dict[begin][TEMP_TIME] #temp, to avoid using google API too much
             del node[0]
 
 
@@ -487,10 +506,10 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
     #If there is at least one route with all locations open, return route 
     #with best time. Else return route with top priority score.
     if optimal:
-        return optimal, time, past_transit_times
+        return optimal, time, past_transit_times, exceptions
     else:
         failed_all_open = sorted(failed_all_open, key = lambda x: (x[0], x[2]))
-        return failed_all_open[0][1], failed_all_open[0][2], past_transit_times
+        return failed_all_open[0][1], failed_all_open[0][2], past_transit_times, exceptions
         
 def format_time_string(time):
     '''
@@ -572,6 +591,7 @@ def optomize(user_query, places_dict):
     Returns: list of places, list of exceptions, integer
     '''
     print('reached optomize')
+    exceptions = []
     labels = list(places_dict.keys())
     running_order = permutations(labels)
     if user_query.starting_location:
@@ -596,15 +616,15 @@ def optomize(user_query, places_dict):
     time_end = user_query.time_end.hour * 60 + user_query.time_end.minute
     while time < time_end and num_included_places > 3:
         print('time = ',time)
-        route, time, past_transit_times = get_min_cost(updated_places,
+        route, time, past_transit_times, exceptions = get_min_cost(updated_places,
                                                        user_query,
                                                        places_dict, 
                                                        num_included_places,
                                                        seconds_from_epoch,
-                                                       past_transit_times)
+                                                       past_transit_times, exceptions)
         num_included_places -= 1
     
     #remember to strip starting location
     #going to return two lists and an int: ordered places, list of transit exceptions, total transit time in mins
     print(route)
-    return route, [], time
+    return route, exceptions, time
