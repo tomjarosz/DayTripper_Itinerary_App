@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from datetime import datetime, time, timedelta
 from django.db.models import Count
+from route_optomization import *
 
 from geopy.geocoders import Nominatim
 
@@ -56,7 +57,7 @@ def index(request):
                 id_place = key[3:]
                 places.append(Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'))
 
-        #final_places_list, transit_exceptions, times  = route_optimization(user_query, places)
+        final_places_list, transit_exceptions, times  = optomize(user_query, places)
         final_places_list = []
         transit_exceptions = []
         times = []
@@ -98,7 +99,7 @@ def helper_check_query(post_data):
     #setting default values if needed
     if post_data['arrival_date'][0] == '':
         post_data['arrival_date'] = [(datetime.today() + timedelta(days=1)).date().strftime('%m/%d/%Y')]
-    if post_data['mode_transportation'][0] == '' | post_data['mode_transportation'][0] == 'any':
+    if post_data['mode_transportation'][0] == '' or post_data['mode_transportation'][0] == 'any':
         post_data['mode_transportation'] = 'driving'
 
     post_data['time_start'] = post_data['time_frame'][0].split(' - ')[0]
