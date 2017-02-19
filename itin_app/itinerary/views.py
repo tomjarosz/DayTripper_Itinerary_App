@@ -56,11 +56,14 @@ def index(request):
                 id_place = key[3:]
                 places.append(Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'))
 
-        print(b)
+        #final_places_list, transit_exceptions, times  = route_optimization(user_query, places)
+        final_places_list = []
+        transit_exceptions = []
+        times = []
 
-        #places_list2 = route_optimization(user_query, places)
-
-        print(user_query)
+        context['final_places_list'] = final_places_list
+        context['transit_exceptions'] = transit_exceptions
+        context['times'] = times
 
         return render(request, 'itinerary/final_results.html', context)
 
@@ -95,19 +98,17 @@ def helper_check_query(post_data):
     #setting default values if needed
     if post_data['arrival_date'][0] == '':
         post_data['arrival_date'] = [(datetime.today() + timedelta(days=1)).date().strftime('%m/%d/%Y')]
-    if post_data['mode_transportation'][0] == '':
-        post_data['mode_transportation'] = 'walking'
+    if post_data['mode_transportation'][0] == '' | post_data['mode_transportation'][0] == 'any':
+        post_data['mode_transportation'] = 'driving'
 
     post_data['time_start'] = post_data['time_frame'][0].split(' - ')[0]
     post_data['time_end'] = post_data['time_frame'][0].split(' - ')[1]
 
     if post_data['start_location'][0] == '':
-        pass
+        start_lat, start_lng = None, None
     else:
-        pass
-    start_lat = 0
-    start_lng = 0
-    
+        start_lat, start_lng = helper_check_address(post_data['start_location'][0])
+
     arrival_date = datetime.strptime(post_data.get('arrival_date')[0], r'%m/%d/%Y').date().strftime('%Y-%m-%d')
     
     user_query = UserQuery(
@@ -167,6 +168,19 @@ def helper_check_city(query_city):
     
     return city
 
+
+def helper_check_address(address_str):
+    '''
+    Function to parse a query_city and get the correct City information
+    
+    Input: a string with a city name (country name optional)
+    Returns: a City object with the appropriate data
+    '''
+        
+    geolocator = Nominatim()
+    location = geolocator.geocode(address_str)
+    print(location.latitude, location.longitude)
+    return location.latitude, location.longitude
 
 #######
 
