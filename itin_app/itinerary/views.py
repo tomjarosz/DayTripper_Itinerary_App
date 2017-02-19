@@ -50,14 +50,11 @@ def index(request):
         
         user_query = UserQuery.objects.get(id=query_id)
 
+        places = []
         for key in b:
             if 'ur_' in key:
                 id_place = key[3:]
-
-        place_test = Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca')
-
-        print(user_query.time_start)
-        print(place_test.is_open_dow_time(4, "14:00:00"))
+                places.append(Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'))
 
 
         #places_list2 = route_optimization(user_query, places)
