@@ -57,13 +57,13 @@ def index(request):
 
         #modified places to be a dict. correct implementation?
         places = {}
-        limit, current_nodes = 5 , 0#for testing, temporary
+        #limit, current_nodes = 5 , 0#for testing, temporary
 
         for key in b:
-            if 'ur_' in key and current_nodes <= limit:
+            if 'ur_' in key :#and current_nodes <= limit:
                 id_place = key[3:]
                 places[key] = [Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'), b[key]]
-                current_nodes += 1
+        #        current_nodes += 1
 
         final_places_list, transit_exceptions, times  = optomize(user_query, places)
         final_places_list = []
@@ -395,8 +395,20 @@ def prelim_geo_sort(places_dict, running_order, user_query, accuracy_degree = 3)
         accuracy_degree: int (optional, deefaults to 3) 
     Returns: list of list of strings
     '''
-    print('reached prelim_geo_sort')
-    print('running order has len', len(running_order))
+    #this is still too slow. have to speed it up
+
+    distance_matrix = {}
+    place_ids = places_dict.keys()
+    for item_a in place_ids:
+        for item_b in place_ids:
+            if item_a != item_b and item_b != 'starting_location':
+                distance = haversine(places_dict[item_a][0].lng, places_dict[item_a][0].lat,
+                                     places_dict[item_b][0].lng, places_dict[item_b][0].lat)
+                if item_a in distance_matrix.keys():
+                    distance_matrix[item_a][item_b] = distance
+                else:
+                    distance_matrix[item_a] = {item_b:distance}
+
     rv = []
     for element in running_order:
         running_distance = 0
@@ -411,7 +423,7 @@ def prelim_geo_sort(places_dict, running_order, user_query, accuracy_degree = 3)
                 lat_0 = places_dict[id_0][0].lat
             lon_1 = places_dict[id_1][0].lng
             lat_1 = places_dict[id_1][0].lat
-            distance = haversine(lon_0, lat_0 , lon_1, lat_1)
+            distance = distance_matrix[id_0][id_1]
             running_distance += distance
         rv.append((distance, element))
     rv = sorted(rv)
@@ -419,7 +431,7 @@ def prelim_geo_sort(places_dict, running_order, user_query, accuracy_degree = 3)
     return rv[:accuracy_degree]
 
 
-def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, seconds_from_epoch, past_transit_times):
+def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, seconds_from_epoch, past_transit_times, exceptions):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -435,7 +447,6 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
 
     if not exceptions:
         exceptions = []
-    print('reached get_min_cost')
     optimal = None
     best_time = 999999
     failed_all_open = []
@@ -542,7 +553,6 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
         mode_od_transportation: string
     Returns: int, dict
     '''
-    print('reached retrieve_transit_time')
     #Hours of the day, in minutes
     FIRST_BIN = 7 * 60
     SECOND_BIN = 10 * 60
@@ -562,11 +572,16 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
         section = 'evening'
     else:
         section = 'non_peak'
+    #this code needs to be fixed. manualy insert a dict at every step
 
     rv = None
-    if begin_id in past_transit_times.keys():
-        if end_id in past_transit_times[begin_id].keys():
-            rv = past_transit_times.get(begin_id).get(end_id).get(section) 
+    if begin_id not in past_transit_times.keys():
+        past_transit_times[begin_id] = {}
+    if end_id not in past_transit_times[begin_id].keys():
+        past_transit_times[begin_id][end_id] = {}
+    if section in past_transit_times[begin_id][end_id].keys():
+        rv = past_transit_times[begin_id][end_id][section]
+
     if not rv:
         #this call will be replaced with the relevant place object code as soon as 
         #that is implemented
@@ -590,7 +605,6 @@ def optomize(user_query, places_dict):
         places_dict: dict containing place objects, user ratings keyed by place id
     Returns: list of places, list of exceptions, integer
     '''
-    print('reached optomize')
     exceptions = []
     labels = list(places_dict.keys())
     running_order = permutations(labels)
@@ -603,19 +617,14 @@ def optomize(user_query, places_dict):
         if distance < 10000:
             running_order.prepend('starting_location')
     updated_places = prelim_geo_sort(places_dict, running_order, user_query)
-    print('updated places is', updated_places)
     route = []
     time = -1
     past_transit_times = {}
     num_included_places = len(labels)
-    #check this lineVVV
     epoch_date = date(1970,1,1)
-    #user_arrival_date = datetime.date(user_query.arrival_date.year, user_query.arrival_date.month, user_query.arrival_date.day)
     seconds_from_epoch = int((user_query.arrival_date - epoch_date).total_seconds())
-    print()
     time_end = user_query.time_end.hour * 60 + user_query.time_end.minute
     while time < time_end and num_included_places > 3:
-        print('time = ',time)
         route, time, past_transit_times, exceptions = get_min_cost(updated_places,
                                                        user_query,
                                                        places_dict, 
@@ -626,5 +635,7 @@ def optomize(user_query, places_dict):
     
     #remember to strip starting location
     #going to return two lists and an int: ordered places, list of transit exceptions, total transit time in mins
-    print(route)
+    print('return value is:', route, exceptions, time)
+    if user_query.starting_location:
+        route = route[1:]
     return route, exceptions, time
