@@ -32,7 +32,6 @@ class Place(models.Model):
 
     def is_open_dow_time(self, dow, time):
         data = Place_hours.objects.filter(place_id=self.id_str, d_of_w_open=dow, open_time__lte=time, close_time__gte=time)
-        print(data)
         return data.exists()
 
 

@@ -57,13 +57,13 @@ def index(request):
 
         #modified places to be a dict. correct implementation?
         places = {}
-        #limit, current_nodes = 5 , 0#for testing, temporary
+        limit, current_nodes = 5 , 0#for testing, temporary
 
         for key in b:
-            if 'ur_' in key :#and current_nodes <= limit:
+            if 'ur_' in key and current_nodes <= limit:
                 id_place = key[3:]
                 places[key] = [Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'), b[key]]
-        #        current_nodes += 1
+                current_nodes += 1
 
         final_places_list, transit_exceptions, times  = optomize(user_query, places)
         final_places_list = []
@@ -409,6 +409,8 @@ def prelim_geo_sort(places_dict, running_order, user_query, accuracy_degree = 3)
                 else:
                     distance_matrix[item_a] = {item_b:distance}
 
+    
+
     rv = []
     for element in running_order:
         running_distance = 0
@@ -444,14 +446,12 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
         past_transit_times: dict
     Return: list of strings, integer, int/None, dict
     '''
-
-    if not exceptions:
-        exceptions = []
+    print('called min cost')
     optimal = None
     best_time = 999999
     failed_all_open = []
     time_start = user_query.time_start.hour * 60 + user_query.time_start.minute
-
+    print('time start is', time_start)
     for choice in ordered_routes:
         choice = choice[:num_included_places + 1]
         all_open = True
@@ -459,8 +459,11 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
         node = choice[:]
         priority_score = 0
         while len(node) > 2:
+            print('time is', time,'with', len(node), 'nodes remaining')
             begin = node[0]
             end = node[1]
+            print('node 0 is', begin)
+            print('node 1 is', end)
             #If location isn't open at begining or end of projected time, this route has
             #second class status. Builds priority score, a measure of how many desirable
             #sites are open in this route, based on location ranking.
@@ -481,11 +484,12 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
                                                                         time, past_transit_times,
                                                                         places_dict,
                                                                         mode_of_transportation)
+            print('transit time is', transit_seconds)
             #if transit time too long and mode of transit not car, add tag to place_id here
             #this part not finished
-            if transit_seconds > 2700 and user_query.mode_transportation != 'driving':
-                pass
-                if user_query.mode_transportation != 'transit':
+            if transit_seconds > 1800 and mode_of_transportation != 'driving':
+                print('trying alternate transit types')
+                if mode_of_transportation != 'transit':
                     new_time = helper_transit_time(places_dict[begin_id][0].lat,
                                                      places_dict[begin_id][0].lng,
                                                      places_dict[end_id][0].lat,
@@ -509,6 +513,7 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
 
 
         if time < best_time and all_open:
+            print('theres a new optimal choice(within get min)')
             optimal = choice
             best_time = time
         else:
@@ -517,8 +522,10 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
     #If there is at least one route with all locations open, return route 
     #with best time. Else return route with top priority score.
     if optimal:
+        print('returning best route')
         return optimal, time, past_transit_times, exceptions
     else:
+        print('failed all open')
         failed_all_open = sorted(failed_all_open, key = lambda x: (x[0], x[2]))
         return failed_all_open[0][1], failed_all_open[0][2], past_transit_times, exceptions
         
@@ -553,6 +560,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
         mode_od_transportation: string
     Returns: int, dict
     '''
+    print('called transit time')
     #Hours of the day, in minutes
     FIRST_BIN = 7 * 60
     SECOND_BIN = 10 * 60
@@ -592,7 +600,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
                                  int(epoch_time),
                                  mode_of_transportation)
         past_transit_times[begin_id][end_id][section] = rv
-
+        print('got new transit time. it is',rv)
     return rv, past_transit_times
 
 
@@ -620,22 +628,24 @@ def optomize(user_query, places_dict):
     route = []
     time = -1
     past_transit_times = {}
-    num_included_places = len(labels)
     epoch_date = date(1970,1,1)
     seconds_from_epoch = int((user_query.arrival_date - epoch_date).total_seconds())
     time_end = user_query.time_end.hour * 60 + user_query.time_end.minute
-    while time < time_end and num_included_places > 3:
+    num_included_places = 2
+    while time < time_end and num_included_places <= len(labels):
+        print('optomize time', time)
+        last_route, last_time, last_exceptions = route, time, exceptions
         route, time, past_transit_times, exceptions = get_min_cost(updated_places,
                                                        user_query,
                                                        places_dict, 
                                                        num_included_places,
                                                        seconds_from_epoch,
                                                        past_transit_times, exceptions)
-        num_included_places -= 1
+        num_included_places += 1
     
     #remember to strip starting location
     #going to return two lists and an int: ordered places, list of transit exceptions, total transit time in mins
-    print('return value is:', route, exceptions, time)
+    print('return value is:', last_route, last_exceptions, last_time)
     if user_query.starting_location:
         route = route[1:]
-    return route, exceptions, time
+    return last_route, last_exceptions, last_time
