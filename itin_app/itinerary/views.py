@@ -10,6 +10,7 @@ from .models import Category, City, Place, Place_hours, UserQuery
 
 import json
 import requests
+import pandas as pd
 
 from math import radians, cos, sin, asin, sqrt
 from transit_time import helper_transit_time
@@ -654,3 +655,63 @@ def optomize(user_query, places_dict):
         route = route[1:]
     
     return last_route, last_exceptions, last_time
+
+#####CODE FROM HERE DOWN IS WIP######
+def buiild_matrix(places_dict):
+    '''
+    To be implemented.
+    '''
+    return []
+
+def matrix_reduce(matrix):
+    #handle rows
+    row_mins = list(matrix.idxmin(axis=1))
+    for i, j in enumerate(row_mins):
+        min_value = matrix.iloc[i].loc[j]
+        for entry in range(matrix.shape[0]):
+            matrix.iloc[i].iloc[entry] -= min_value
+    #handle columns
+    col_mins = list(matrix.idxmin(axis=0))
+    for j, i in enumerate(col_mins):
+        min_value = matrix.loc[i].iloc[j]
+        for entry in range(matrix.shape[0]):
+            matrix.iloc[entry].iloc[j] -= min_value
+    return matrix
+    
+def tsp(matrix):
+    path = []
+    original_matrix = matrix.copy(deep=True)
+    while matrix.shape[0] > 1:
+        print(matrix)   
+        matrix = matrix_reduce(matrix)
+        penalties = []
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[0]):
+                if matrix.iloc[i,j] == 0:
+                    row = list(matrix.iloc[i])
+                    zero_index = row.index(0)
+                    del row[zero_index]
+                    col = list(matrix.iloc[:,j])
+                    zero_index = col.index(0)
+                    del col[zero_index]
+                    row_min = min(row)
+                    col_min = min(col)
+                    total = row_min + col_min
+                    
+                    penalties.append((total, i, j))
+        penalties = sorted(penalties, key = lambda x: x[0])
+        biggest_penalty = penalties[-1]
+        drop_i, drop_j = biggest_penalty[1], biggest_penalty[2]
+        #get index of drop_i, drop_j
+        drop_i_label = matrix.index[drop_j]
+        drop_j_label = matrix.columns[drop_i]
+        matrix.iloc[drop_i, drop_j] = INF
+        matrix.drop(matrix.columns[drop_i],axis=1,inplace=True)
+
+        matrix.drop(matrix.index[drop_j],inplace=True)
+        path.append((drop_i_label,drop_j_label))
+    running_distance = 0
+    for element in path:
+        dist = original_matrix.loc[element[0], element[1]]
+        running_distance += dist
+    return path, running_distance
