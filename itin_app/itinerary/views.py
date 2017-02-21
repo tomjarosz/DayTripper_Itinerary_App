@@ -64,7 +64,7 @@ def index(request):
                 id_place = key[3:]
                 places[id_place] = [Place.objects.get(id_str=id_place), b[key]]
                 current_nodes += 1
-        print(places)
+
         final_places_list, transit_exceptions, times  = optomize(user_query, places)
         
         final_places_list = [Place.objects.get(id_str=id_place) for id_place in final_places_list]
@@ -624,7 +624,7 @@ def optomize(user_query, places_dict):
         start_lon = user_query.start_lng
         distance = haversine(start_lat, start_lon, cit_lat, cit_lon)
         if distance < 10000:
-            running_order.prepend('starting_location')
+            running_order.insert(0,'starting_location')
     updated_places = prelim_geo_sort(places_dict, running_order, user_query)
     route = []
     time = -1
