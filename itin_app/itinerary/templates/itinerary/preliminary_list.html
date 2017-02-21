@@ -6,17 +6,27 @@
     {% csrf_token %}
     <input type='hidden' name='query_id_from_form' value='{{ query_id }}' />
     
-    {% for place in lista %}
-        <p>
-        {{ place.name }} {{ place.checkins }} 
-        <select name="ur_{{ place.id_str }}">
-            <option value="up">Like it</option>
-            <option value="mid" selected="selected">Indiferent</option>
-            <option value="down">Don't like it</option>
-        </select>
-        </p>
-    {% endfor %}
-
+        <table style="width:50%">
+          <tr>
+            <th>Place name</th>
+            <th>Checkins</th> 
+            <th>User Preference</th>
+          </tr>
+          
+            {% for place in lista %}
+            <tr>
+            <td>{{ place.name }}</td>
+            <td>{{ place.checkins }}</td> 
+            <td>                 
+                <select name="ur_{{ place.id_str }}">
+                    <option value="up">Like it</option>
+                    <option value="mid" selected="selected">Indiferent</option>
+                    <option value="down">Don't like it</option>
+                </select>
+                </td>
+            </tr>      
+            {% endfor %}
+        </table>
     <input type="submit" value="Send2" />
     </form>
 
