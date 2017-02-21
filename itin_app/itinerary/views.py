@@ -62,13 +62,13 @@ def index(request):
         for key in b:
             if 'ur_' in key and current_nodes <= limit:
                 id_place = key[3:]
-                places[key] = [Place.objects.get(id_str='4e5e5155b61cebc23b6e4dca'), b[key]]
+                places[id_place] = [Place.objects.get(id_str=id_place), b[key]]
                 current_nodes += 1
-
+        print(places)
         final_places_list, transit_exceptions, times  = optomize(user_query, places)
-        #final_places_list = []
-        #transit_exceptions = []
-        #times = []
+        
+        final_places_list = [Place.objects.get(id_str=id_place) for id_place in final_places_list]
+        print(final_places_list)
 
         context['final_places_list'] = final_places_list
         context['transit_exceptions'] = transit_exceptions
@@ -649,4 +649,5 @@ def optomize(user_query, places_dict):
     #print('return value is:', last_route, last_exceptions, last_time)
     if user_query.starting_location:
         route = route[1:]
+    
     return last_route, last_exceptions, last_time

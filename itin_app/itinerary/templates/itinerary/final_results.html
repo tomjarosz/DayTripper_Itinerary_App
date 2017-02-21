@@ -1,10 +1,23 @@
 {% extends "itinerary/main_form.html" %}
 
-{% block title %}These are the final results
+{% block title %}
+
+These are the final results
+<table style="width:50%">
+  <tr>
+    <th>Place name</th>
+    <th>Checkins</th> 
+    <th>Latitude</th>
+    <th>Longitude</th>
+  </tr>
     {% for place in final_places_list %}
-        <p>
-        {{ place.name }} {{ place.checkins }} 
-        </p>
+    <tr>
+    <td>{{ place.name }}</td>
+    <td>{{ place.checkins }}</td> 
+    <td>{{ place.lat }}</td>
+    <td>{{ place.lng }}</td>
+    </tr>      
     {% endfor %}
+</table>
 
 {% endblock %}
