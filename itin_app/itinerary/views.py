@@ -462,6 +462,8 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
             #print('time is', time,'with', len(node), 'nodes remaining')
             begin = node[0]
             end = node[1]
+            if begin == 'starting_location': print('begin is starting location')
+            if end == 'starting_location': print('end is starting location')
             #print('node 0 is', begin)
             #print('node 1 is', end)
             #If location isn't open at begining or end of projected time, this route has
@@ -560,7 +562,6 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
         mode_od_transportation: string
     Returns: int, dict
     '''
-    print('called transit time')
     #Hours of the day, in minutes
     FIRST_BIN = 7 * 60
     SECOND_BIN = 10 * 60
@@ -600,7 +601,6 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
                                  int(epoch_time),
                                  mode_of_transportation)
         past_transit_times[begin_id][end_id][section] = rv
-        print('got new transit time. it is',rv)
     return rv, past_transit_times
 
 
@@ -624,7 +624,10 @@ def optomize(user_query, places_dict):
         start_lon = user_query.start_lng
         distance = haversine(start_lat, start_lon, cit_lat, cit_lon)
         if distance < 10000:
-            running_order.insert(0,'starting_location')
+            pass
+            #temporarily disabled
+            #running_order.insert(0,'starting_location')
+            #print('included  starting_location')
     updated_places = prelim_geo_sort(places_dict, running_order, user_query)
     route = []
     time = -1
