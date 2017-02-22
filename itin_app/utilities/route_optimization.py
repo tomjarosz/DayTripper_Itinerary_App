@@ -1,7 +1,8 @@
 from datetime import datetime, time, timedelta, date
 from math import radians, cos, sin, asin, sqrt
-from transit_time import helper_transit_time
-from weather import *
+
+from utilities.transit_time import helper_transit_time
+from utilities.weather import *
 
 ##from here down is the former 'route_optomization file, which has been moved to here. it is a WIP'
 
@@ -304,7 +305,13 @@ def optomize(user_query, places_dict):
     Returns: list of places, list of exceptions, integer
     '''
     exceptions = []
-    labels = list(places_dict.keys())
+
+    #HERE WE ARE SELECTING UP TO 8 PLACES
+    labels = [key for key in places_dict if places_dict[key][1] == 'up']
+    if len(labels) < 8:
+        labels.extend([key for key in places_dict if places_dict[key][1] == 'mid'])
+    labels = labels[:8]
+
     #print('there are {} places to fit in'.format(len(labels)))
     running_order = permutations(labels)
     if user_query.starting_location:

@@ -1,15 +1,19 @@
-from itinerary.models import Place
+from itinerary.models import Place, Place_hours
+
+from datetime import datetime, time, timedelta, date
 
 import json
 import requests
-
-
 
 CLIENT_ID='C1MWPLVELHVOWEQDPZ3FQX2QL31BD5FE44Y0JQBKNRUA1UOA'
 CLIENT_SECRET='0FRFY3QUW0LZGA32TMEFOSCUQYIXMUK2YU4RSDHJ1EQLA0AQ'
 
 
-def places_from_foursquare(city_obj, user_categories, d_of_w_query):
+def places_from_foursquare(user_query, user_categories):
+    city_obj = user_query.city
+
+    user_dow = datetime.strptime(user_query.arrival_date, r'%Y-%m-%d').date().weekday() + 1
+
     list_of_places = []
     for category in user_categories:
         #check if we have category and city, and add those places to list of places
@@ -124,7 +128,7 @@ def places_from_foursquare(city_obj, user_categories, d_of_w_query):
     for c, place_id_str in sorted(list_of_places, reverse=True):
         place_to_user = Place.objects.get(id_str=place_id_str)
 
-        if place_to_user.is_open_dow(d_of_w_query) and place_to_user not in final_list:
+        if place_to_user.is_open_dow(user_dow) and place_to_user not in final_list:
             final_list.append(place_to_user)
 
     return final_list[:10]
