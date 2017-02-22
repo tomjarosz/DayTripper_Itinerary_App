@@ -4,6 +4,7 @@ from datetime import datetime, time, timedelta, date
 from geopy.geocoders import Nominatim
 
 def parse_query(initial_form_data, proper_city):
+    user_query = dict(initial_form_data)
     cat_list = []
     for i in range(1,9):
         if 'cat{}'.format(i) in user_query:
@@ -38,7 +39,7 @@ def parse_query(initial_form_data, proper_city):
     arrival_date = datetime.strptime(user_query.get('arrival_date')[0], r'%m/%d/%Y').date().strftime('%Y-%m-%d')
     
     user_query_obj = UserQuery(
-        query_city = requested_city[0],
+        query_city = user_query.get('query_city'),
         city = proper_city,   
         arrival_date = arrival_date,
         time_start = user_query.get('time_start'),
