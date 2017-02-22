@@ -1,18 +1,9 @@
 from itinerary.models import Category, City, UserQuery
 
 from datetime import datetime, time, timedelta, date
+from geopy.geocoders import Nominatim
 
-def parse_query(initial_form_data):
-    user_query = dict(initial_form_data)     #I do this, because "QueryDict is immutable"
-        
-    requested_city = user_query.get('query_city')
-
-    #get random city if they don't know
-    if requested_city[0] == "I don't know":
-        proper_city = City.objects.order_by('?')[0]
-    else:
-        proper_city = helper_check_city(requested_city[0])
-
+def parse_query(initial_form_data, proper_city):
     cat_list = []
     for i in range(1,9):
         if 'cat{}'.format(i) in user_query:
@@ -62,13 +53,18 @@ def parse_query(initial_form_data):
 
     return user_query_obj, user_categories
 
-def helper_check_city(query_city):
+def parse_city(query_city):
     '''
     Function to parse a query_city and get the correct City information
     
     Input: a string with a city name (country name optional)
     Returns: a City object with the appropriate data
     '''
+
+    #get random city if they don't know
+    if query_city == "I don't know":
+        return City.objects.order_by('?')[0]
+
     #Case 1: user most likely clicked in one of the options
     if ", " in query_city:
         city_name, country_name = query_city.split(", ")

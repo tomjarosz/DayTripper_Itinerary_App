@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Count
-from .models import Category, City, Place, Place_hours, UserQuery
+from .models import Category, City, Place, UserQuery
 
-from utilities.query_parser import parse_query
+from utilities.query_parser import parse_city, parse_query
 from utilities.route_optimization import optomize
 from utilities.places_from_foursquare import places_from_foursquare
 
@@ -30,9 +30,14 @@ def index(request):
 
         #show error page if form is empty
         if initial_form_data.get('query_city') == '':
-            return render(request, 'itinerary/input_error.html', context)
+            return render(request, 'itinerary/input_error1.html', context)
 
-        proper_query_obj, user_categories = parse_query(initial_form_data)
+        proper_city = parse_city(initial_form_data.get('query_city'))
+        
+        if proper_city == None:
+            return render(request, 'itinerary/input_error2.html', context)
+
+        proper_query_obj, user_categories = parse_query(initial_form_data, proper_city)
         
         places_list_to_user = places_from_foursquare(proper_query_obj, user_categories)
 
