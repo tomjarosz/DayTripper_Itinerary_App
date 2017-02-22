@@ -1,0 +1,38 @@
+user_category|category_name|category_id|avg_duration
+Architectural Attraction|Castle   |50aaa49e4b90af0d42d5de11|60
+Architectural Attraction|Lighthouse   |4bf58dd8d48988d15d941735|60
+Architectural Attraction|Palace   |52e81612bcbc57f1066b7a14|90
+Architectural Attraction|Building   |4bf58dd8d48988d130941735|60
+Architectural Attraction|Historic Site  |4deefb944765f83613cdba6e|90
+Architectural Attraction|Observatory   |5744ccdfe4b0c0459246b4d9|45
+Arts & Culture |Art Gallery  |4bf58dd8d48988d1e2931735|120
+Arts & Culture |Exhibit   |56aa371be4b08b9a8d573532|90
+Arts & Culture |Museum   |4bf58dd8d48988d181941735|120
+Arts & Culture |Public Art  |507c8c4091d498d9fc8c67a9|60
+Arts & Culture |Sculpture Garden  |4bf58dd8d48988d166941735|45
+Arts & Culture |Cultural Center  |52e81612bcbc57f1066b7a32|60
+Arts & Culture |Library   |4bf58dd8d48988d12f941735|45
+Gardens & Outdoor Spaces|Botanical Garden  |52e81612bcbc57f1066b7a22|60
+Gardens & Outdoor Spaces|Park   |4bf58dd8d48988d163941735|60
+Gardens & Outdoor Spaces|Scenic Lookout  |4bf58dd8d48988d165941735|45
+Gardens & Outdoor Spaces|Sculpture Garden  |4bf58dd8d48988d166941735|45
+Historic Sites & Landmarks|Historic Site  |4deefb944765f83613cdba6e|90
+Historic Sites & Landmarks|Memorial Site  |5642206c498e4bfca532186c|90
+Historic Sites & Landmarks|Cemetery   |4bf58dd8d48988d15c941735|60
+Historic Sites & Landmarks|Prison   |5310b8e5bcbc57f1066bcbf1|90
+Museums   |Museum   |4bf58dd8d48988d181941735|120
+Museums   |Art Gallery  |4bf58dd8d48988d1e2931735|120
+Museums   |Exhibit   |56aa371be4b08b9a8d573532|90
+Beaches, Marinas & Harbors|Pier   |4e74f6cabd41c4836eac4c31|60
+Beaches, Marinas & Harbors|Harbor / Marina |4bf58dd8d48988d1e0941735|60
+Beaches, Marinas & Harbors|Lighthouse   |4bf58dd8d48988d15d941735|60
+Beaches, Marinas & Harbors|Beach   |4bf58dd8d48988d1e2941735|120
+Nature & Outdoors |Mountain   |4eb1d4d54b900d56c88a45fc|120
+Nature & Outdoors |National Park  |52e81612bcbc57f1066b7a21|120
+Nature & Outdoors |Nature Preserve  |52e81612bcbc57f1066b7a13|120
+Nature & Outdoors |Park   |4bf58dd8d48988d163941735|60
+Nature & Outdoors |Sculpture Garden  |4bf58dd8d48988d166941735|45
+Nature & Outdoors |Botanical Garden  |52e81612bcbc57f1066b7a22|60
+Nature & Outdoors |Cave   |56aa371be4b08b9a8d573511|120
+Nature & Outdoors |Garden   |4bf58dd8d48988d15a941735|60
+Zoo   |Zoo   |4bf58dd8d48988d17b941735|180

@@ -23,7 +23,8 @@ class Place(models.Model):
     category = models.CharField(max_length=200)
     rating = models.IntegerField()
     checkins = models.IntegerField()
-    description = models.CharField(max_length = 200)
+    description = models.CharField(max_length = 200, null=True)
+    url = models.CharField(max_length = 500, null=True)
 
     def __str__(self):
         return str(self.id_str + self.name)
