@@ -225,7 +225,10 @@ def places_from_dict(city_obj, user_categories, d_of_w_query):
             state = get_place_info('state', place['location'])
             country = get_place_info('country', place['location'])
             checkins = place['stats']['checkinsCount']
-            description = place['description'][:100]+'...'
+            if 'description' in place:
+                description = place['description'][:100]+'...'
+            else:
+                description = ''
 
             place_obj = Place(
                 id_str = place_id,
