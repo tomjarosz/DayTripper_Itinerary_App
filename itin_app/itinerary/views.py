@@ -225,6 +225,7 @@ def places_from_dict(city_obj, user_categories, d_of_w_query):
             state = get_place_info('state', place['location'])
             country = get_place_info('country', place['location'])
             checkins = place['stats']['checkinsCount']
+            description = place['description'][:100]+'...'
 
             place_obj = Place(
                 id_str = place_id,
@@ -236,7 +237,9 @@ def places_from_dict(city_obj, user_categories, d_of_w_query):
                 postal_code = postal_code,
                 category = category,
                 rating = 0,
-                checkins = checkins)
+                checkins = checkins,
+                description = description)
+
             
             place_obj.save()
 
