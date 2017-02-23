@@ -8,6 +8,7 @@
     
         <table style="width:50%">
           <tr>
+            <th>Photo</th>
             <th>Place name</th>
             <th>Checkins</th> 
             <th>Description</th>
@@ -16,9 +17,11 @@
           
             {% for place in lista %}
             <tr>
+            <td><img src="{{ place.url }}" style="width:120px;height:120px;">
+            </td>
             <td>{{ place.name }}</td>
             <td>{{ place.checkins }}</td> 
-            <td>{{ place.description }}</td>
+            <td>{{ place.description|truncatechars:50 }}</td>
             <td>                 
                 <select name="ur_{{ place.id_str }}">
                     <option value="up">Like it</option>

@@ -31,10 +31,6 @@ def get_place_from_place_dict(place_dict, city_obj, category):
     state = get_place_info('state', place_dict['location'])
     country = get_place_info('country', place_dict['location'])
     checkins = place_dict['stats']['checkinsCount']
-    if 'description' in place_dict:
-        description = place_dict['description'][:100]+'...'
-    else:
-        description = ''
 
     place_obj = Place(
         id_str = place_id,
@@ -46,21 +42,20 @@ def get_place_from_place_dict(place_dict, city_obj, category):
         postal_code = postal_code,
         category = category,
         rating = 0,
-        checkins = checkins,
-        description = description)
+        checkins = checkins)
 
-    place_obj.save()
+    #place_obj.save()
     
-    hours_query = 'https://api.foursquare.com/v2/venues/{id}/hours/?'\
+    detail_query = 'https://api.foursquare.com/v2/venues/{id}/hours?'\
                   '&intent=browse&v=20170202&client_secret={client_secret}'\
                   '&client_id={client_id}'.format(
                 id=place_id, client_secret=CLIENT_SECRET, client_id=CLIENT_ID) 
     
-    hours_query_request = requests.get(hours_query)
-    json_data_for_hours = json.loads(hours_query_request.text)
-
-    if 'timeframes' in json_data_for_hours['response']['hours']:
-        timeframe_list = json_data_for_hours['response']['hours']['timeframes']
+    detail_query_request = requests.get(detail_query)
+    json_detail_data = json.loads(detail_query_request.text)
+    print(json_detail_data)
+    if 'timeframes' in json_detail_data['response']['hours']:
+        timeframe_list = json_detail_data['response']['hours']['timeframes']
         
         for timeframe in timeframe_list:
             days = timeframe['days']
@@ -81,8 +76,8 @@ def get_place_from_place_dict(place_dict, city_obj, category):
                         open_time = open_time,
                         close_time = close_time)
                     place_hour.save()
-    elif 'timeframes' in json_data_for_hours['response']['popular']:
-        timeframe_list = json_data_for_hours['response']['popular']['timeframes']
+    elif 'timeframes' in json_detail_data['response']['popular']:
+        timeframe_list = json_detail_data['response']['popular']['timeframes']
         
         for timeframe in timeframe_list:
             days = timeframe['days']
@@ -103,6 +98,8 @@ def get_place_from_place_dict(place_dict, city_obj, category):
                         open_time = open_time,
                         close_time = close_time)
                     place_hour.save()
+
+    place_obj.save()
 
     return place_obj
 
@@ -113,6 +110,7 @@ def places_from_foursquare(user_query, user_categories):
     user_dow = datetime.strptime(user_query.arrival_date, r'%Y-%m-%d').date().weekday() + 1
 
     list_of_places = []
+    nlimit = 10-int(len(user_categories)/6)
     for category in user_categories:
         #check if we have category and city, and add those places to list of places
         if Place.objects.filter(category=category, city=city_obj).exists():
@@ -123,29 +121,63 @@ def places_from_foursquare(user_query, user_categories):
             continue
 
         query = 'https://api.foursquare.com/v2/venues/search?'\
-                'll={city_lat},{city_lng}&categoryId={category}&limit=50&'\
+                'll={city_lat},{city_lng}&categoryId={category}&limit={nlimit}&'\
                 'radius=10000&intent=browse&v=20170202&'\
                 'client_secret={client_secret}&client_id={client_id}'.format(
-                city_lat=city_obj.city_lat, city_lng=city_obj.city_lng ,category=category, client_secret=CLIENT_SECRET, client_id=CLIENT_ID)   
+                city_lat=city_obj.city_lat, 
+                city_lng=city_obj.city_lng,
+                category=category, 
+                nlimit=nlimit,
+                client_secret=CLIENT_SECRET, client_id=CLIENT_ID)   
 
         places = requests.get(query)
         json_data = json.loads(places.text)
         list_of_places_dict = json_data['response']['venues']
 
-        with Pool() as pool:
+        #here we do the multiprocessing!
+        with Pool(processes=4) as pool:
             processed_places = pool.map(
                 partial(get_place_from_place_dict, city_obj=city_obj, category=category), 
                 list_of_places_dict)
         
+
         list_of_places.extend([(place.checkins, place.id_str) for place in processed_places if place])
 
 
     final_list = []
-    for c, place_id_str in sorted(list_of_places, reverse=True):
+    
+    for _, place_id_str in sorted(list_of_places, reverse=True):
         place_to_user = Place.objects.get(id_str=place_id_str)
 
         if place_to_user.is_open_dow(user_dow) and place_to_user not in final_list:
             final_list.append(place_to_user)
+
+    #here we should update description and photos urls, from detailed query
+    for place in final_list[:10]:
+        detail_query = 'https://api.foursquare.com/v2/venues/{id}/?'\
+                  '&intent=browse&v=20170202&client_secret={client_secret}'\
+                  '&client_id={client_id}'.format(
+                id=place.id_str, client_secret=CLIENT_SECRET, client_id=CLIENT_ID) 
+
+        detail_query_request = requests.get(detail_query)
+        json_detail_data = json.loads(detail_query_request.text)
+        
+        try:
+            photo_dict = json_detail_data['response']['venue']['bestPhoto']
+            photo_url = photo_dict['prefix']+'120x120'+photo_dict['suffix']
+        except:
+            photo_url = ''
+        
+        try:
+            description = json_detail_data['response']['venue']['description']
+        except:
+            description = ''
+
+        print(json_detail_data['response']['venue'])
+    
+        place.description = description
+        place.url = photo_url
+        place.save()
 
     return final_list[:10]
 
