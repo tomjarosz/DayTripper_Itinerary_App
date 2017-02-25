@@ -53,7 +53,7 @@ def get_place_from_place_dict(place_dict, city_obj, category):
     
     detail_query_request = requests.get(detail_query)
     json_detail_data = json.loads(detail_query_request.text)
-    print(json_detail_data)
+
     if 'timeframes' in json_detail_data['response']['hours']:
         timeframe_list = json_detail_data['response']['hours']['timeframes']
         
@@ -99,8 +99,6 @@ def get_place_from_place_dict(place_dict, city_obj, category):
                         close_time = close_time)
                     place_hour.save()
 
-    place_obj.save()
-
     return place_obj
 
 
@@ -139,7 +137,9 @@ def places_from_foursquare(user_query, user_categories):
             processed_places = pool.map(
                 partial(get_place_from_place_dict, city_obj=city_obj, category=category), 
                 list_of_places_dict)
-        
+    
+        for place in processed_places:
+            place.save()
 
         list_of_places.extend([(place.checkins, place.id_str) for place in processed_places if place])
 
@@ -172,8 +172,6 @@ def places_from_foursquare(user_query, user_categories):
             description = json_detail_data['response']['venue']['description']
         except:
             description = ''
-
-        print(json_detail_data['response']['venue'])
     
         place.description = description
         place.url = photo_url
