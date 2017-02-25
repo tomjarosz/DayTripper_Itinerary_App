@@ -1,4 +1,5 @@
-from itinerary.models import Place, Place_hours
+from itinerary.models import Place, Place_hours, City
+from django import db
 
 from datetime import datetime, time, timedelta, date
 from functools import partial
@@ -10,7 +11,9 @@ import requests
 CLIENT_ID='C1MWPLVELHVOWEQDPZ3FQX2QL31BD5FE44Y0JQBKNRUA1UOA'
 CLIENT_SECRET='0FRFY3QUW0LZGA32TMEFOSCUQYIXMUK2YU4RSDHJ1EQLA0AQ'
 
-def get_place_from_place_dict(place_dict, city_obj, category):
+def get_place_from_place_dict(place_dict, city_id, category):
+    city_obj = City.objects.get(pk=city_id)
+
     if 'id' not in place_dict:
         return None
 
@@ -99,6 +102,8 @@ def get_place_from_place_dict(place_dict, city_obj, category):
                         close_time = close_time)
                     place_hour.save()
 
+    place_obj.save()
+
     return place_obj
 
 
@@ -133,13 +138,14 @@ def places_from_foursquare(user_query, user_categories):
         list_of_places_dict = json_data['response']['venues']
 
         #here we do the multiprocessing!
+        db.connections.close_all()
         with Pool(processes=4) as pool:
             processed_places = pool.map(
-                partial(get_place_from_place_dict, city_obj=city_obj, category=category), 
+                partial(get_place_from_place_dict, city_id=city_obj.pk, category=category), 
                 list_of_places_dict)
     
-        for place in processed_places:
-            place.save()
+        # for place in processed_places:
+        #     place.save()
 
         list_of_places.extend([(place.checkins, place.id_str) for place in processed_places if place])
 

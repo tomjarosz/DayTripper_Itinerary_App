@@ -15,8 +15,8 @@ import pandas as pd
 def index(request):
     cities = City.objects.order_by('city_name')
 
-    categories_to_display = Category.objects.values('user_category', 'user_cat_id').annotate(dcount=Count('user_category'))
-
+    categories_to_display = Category.objects.values('user_category', 'user_cat_id').annotate(dcount=Count('user_category')).order_by('user_category')
+    print(categories_to_display)
     context = {'cities': cities, 'categories': categories_to_display}
         
     #T1: user accesses application for the first time

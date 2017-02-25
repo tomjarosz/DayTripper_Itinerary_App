@@ -84,6 +84,17 @@ DATABASES = {
 }
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'itinerary_app',
+#         'USER': 'myuser',
+#         'PASSWORD': '1234qwer',
+#         'HOST': 'localhost',
+#         'PORT': ''
+#     }
+# }
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
