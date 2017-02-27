@@ -3,6 +3,8 @@ from math import radians, cos, sin, asin, sqrt
 
 from utilities.transit_time import helper_transit_time
 from utilities.weather import *
+import pandas as pd
+import random
 
 ##from here down is the former 'route_optomization file, which has been moved to here. it is a WIP'
 
@@ -36,6 +38,10 @@ TIME_SPENT = {'50aaa49e4b90af0d42d5de11' : 150,
               '4bf58dd8d48988d15a941735' : 120
 }
 
+TRANSIT_CONSTANT = {'driving' : 100,
+                    'walking' : 300,
+                    'bicycling' : 200,
+                    'transit' : 150}
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -57,74 +63,7 @@ def haversine(lon1, lat1, lon2, lat2):
     m = km * 1000
     return m 
 
-
-def permutations(p):
-    '''
-    Given a list of characters, find every combination.
-    Input:
-        p: list of strings
-    Returns: list of strings
-    '''
-    if len(p) == 1:
-        return [p]
-    else:
-        rv = []
-        for x in p:
-            p_minus_x = [i for i in p if i != x]
-            perms = permutations(p_minus_x)
-            for perm in perms:
-                rv.append([x] + perm)
-    return rv
-
-
-def prelim_geo_sort(places_dict, running_order, user_query, accuracy_degree = 3):
-    '''
-    Provides a preliminary ranking of node routes based on geographic distance.
-    Inputs:
-        places: dict
-        labels: list of list of strings
-        accuracy_degree: int (optional, deefaults to 3) 
-    Returns: list of list of strings
-    '''
-    #this is still too slow. have to speed it up
-
-    distance_matrix = {}
-    place_ids = places_dict.keys()
-    for item_a in place_ids:
-        for item_b in place_ids:
-            if item_a != item_b and item_b != 'starting_location':
-                distance = haversine(places_dict[item_a][0].lng, places_dict[item_a][0].lat,
-                                     places_dict[item_b][0].lng, places_dict[item_b][0].lat)
-                if item_a in distance_matrix.keys():
-                    distance_matrix[item_a][item_b] = distance
-                else:
-                    distance_matrix[item_a] = {item_b:distance}
-
-    
-
-    rv = []
-    for element in running_order:
-        running_distance = 0
-        for i in range(len(element) - 1):
-            id_0 = element[i]
-            id_1 = element[i + 1]
-            if id_0 == 'starting_location':
-                lon_0 = user_query.start_lng
-                lat_0 = user_query.start_lat
-            else:    
-                lon_0 = places_dict[id_0][0].lng
-                lat_0 = places_dict[id_0][0].lat
-            lon_1 = places_dict[id_1][0].lng
-            lat_1 = places_dict[id_1][0].lat
-            distance = distance_matrix[id_0][id_1]
-            running_distance += distance
-        rv.append((distance, element))
-    rv = sorted(rv)
-    rv = [i[1] for i in rv]
-    return rv[:accuracy_degree]
-
-
-def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, seconds_from_epoch, past_transit_times, exceptions):
+def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit_times):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -137,90 +76,99 @@ def get_min_cost(ordered_routes, user_query, places_dict, num_included_places, s
         past_transit_times: dict
     Return: list of strings, integer, int/None, dict
     '''
-    #print('called min cost')
     optimal = None
     best_time = 999999
-    failed_all_open = []
     time_start = user_query.time_start.hour * 60 + user_query.time_start.minute
-    #print('time start is', time_start)
-    for choice in ordered_routes:
-        choice = choice[:num_included_places + 1]
+    optimized = False
+    cycle = 0
+    record_of_imperfect_runs = []
+    exceptions = []
+    while not optimized:   
+        list_of_not_open = [] 
         all_open = True
         time = time_start
-        node = choice[:]
         priority_score = 0
-        while len(node) >= 2:
-            #print('time is', time,'with', len(node), 'nodes remaining')
-            begin = node[0]
-            end = node[1]
-            if begin == 'starting_location': print('begin is starting location')
-            if end == 'starting_location': print('end is starting location')
-            #print('node 0 is', begin)
-            #print('node 1 is', end)
-            #If location isn't open at begining or end of projected time, this route has
-            #second class status. Builds priority score, a measure of how many desirable
-            #sites are open in this route, based on location ranking.
+        for i in range(len(path) - 1):
+            begin = path[i]
+            end = path[i + 1]
+     
             time_string = format_time_string(time)
             if places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
                 priority_score += .5 * places_dict[begin][0].rating
             else:
                 all_open = False 
+                list_of_not_open.append(begin)
             time += TIME_SPENT[places_dict[begin][0].category]
             time_string = format_time_string(time)
             if places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
                 priority_score += .5 * places_dict[begin][0].rating
             else:
                 all_open = False
+                list_of_not_open.append(begin)
             mode_of_transportation = user_query.mode_transportation
             transit_seconds, past_transit_times = retrieve_transit_time(begin, end,
                                                                         seconds_from_epoch,
                                                                         time, past_transit_times,
                                                                         places_dict,
                                                                         mode_of_transportation)
-            #print('transit time is', transit_seconds)
-            #if transit time too long and mode of transit not car, add tag to place_id here
-            #this part not finished
+
             if transit_seconds > 1800 and mode_of_transportation != 'driving':
                 #print('trying alternate transit types')
                 if mode_of_transportation != 'transit':
-                    new_time = helper_transit_time(places_dict[begin_id][0].lat,
-                                                     places_dict[begin_id][0].lng,
-                                                     places_dict[end_id][0].lat,
-                                                     places_dict[end_id][0].lng,
-                                                     int(epoch_time),
-                                                     'transit')
+                    if begin == 'starting_location':
+                        new_time = helper_transit_time(places_dict[begin]['lat'],
+                                                         places_dict[begin]['lng'],
+                                                         places_dict[end][0].lat,
+                                                         places_dict[end][0].lng,
+                                                         int(epoch_time),
+                                                         'transit')
+                    else:
+                        new_time = helper_transit_time(places_dict[begin][0].lat,
+                                                         places_dict[begin][0].lng,
+                                                         places_dict[end][0].lat,
+                                                         places_dict[end][0].lng,
+                                                         int(epoch_time),
+                                                         'transit')
                 else:
                     new_time = transit_seconds
                 if new_time > .75 * transit_seconds:
-                    new_time = helper_transit_time(places_dict[begin_id][0].lat,
-                                                 places_dict[begin_id][0].lng,
-                                                 places_dict[end_id][0].lat,
-                                                 places_dict[end_id][0].lng,
-                                                 int(epoch_time),
-                                                 'driving')
+                    if begin == 'starting_location':
+                        new_time = helper_transit_time(places_dict[begin]['lat'],
+                                                     places_dict[begin]['lng'],
+                                                     places_dict[end][0].lat,
+                                                     places_dict[end][0].lng,
+                                                     int(epoch_time),
+                                                     'driving')
+                    else:
+                        new_time = helper_transit_time(places_dict[begin][0].lat,
+                                                     places_dict[begin][0].lng,
+                                                     places_dict[end][0].lat,
+                                                     places_dict[end][0].lng,
+                                                     int(epoch_time),
+                                                     'driving')
+                            
                 if new_time < .5 * transit_seconds:
-                    exceptions.append((begin_id, end_id, (transit_seconds -  new_time) / 60))
+                    exceptions.append((begin, end, (transit_seconds -  new_time) / 60))
 
             time += transit_seconds / 60
-            del node[0]
 
 
-        if time < best_time and all_open:
-            #print('theres a new optimal choice(within get min)')
-            optimal = choice
-            best_time = time
+        if all_open:
+            return path, time, past_transit_times, exceptions
         else:
-            failed_all_open.append((priority_score, choice, time))
-      
-    #If there is at least one route with all locations open, return route 
-    #with best time. Else return route with top priority score.
-    if optimal:
-        #print('returning best route')
-        return optimal, time, past_transit_times, exceptions
-    else:
-        #print('failed all open')
-        failed_all_open = sorted(failed_all_open, key = lambda x: (x[0], x[2]))
-        return failed_all_open[0][1], failed_all_open[0][2], past_transit_times, exceptions
+            if cycle < 3:
+                record_of_imperfect_runs.append((priority_score, [path, time, past_transit_times, exceptions]))
+                cycle += 1
+                for id_ in list_of_not_open:
+                    place = path.pop(path.index(id_))
+                    path.insert(random.randint(0,len(path)), place)
+                    matrix = build_matrix(path, places_dict, user_query)
+                    path, running_distance = branch_bound(matrix)
+            else:
+                sorted_record = sorted(record_of_imperfect_runs, key=lambda x: x[0])
+                return sorted_record[-1][1]
+
+            
         
 def format_time_string(time):
     '''
@@ -272,7 +220,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
         section = 'evening'
     else:
         section = 'non_peak'
-    #this code needs to be fixed. manualy insert a dict at every step
+
 
     rv = None
     if begin_id not in past_transit_times.keys():
@@ -283,19 +231,26 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch, time, past_trans
         rv = past_transit_times[begin_id][end_id][section]
 
     if not rv:
-        #this call will be replaced with the relevant place object code as soon as 
-        #that is implemented
-        rv = helper_transit_time(places_dict[begin_id][0].lat,
-                                 places_dict[begin_id][0].lng,
-                                 places_dict[end_id][0].lat,
-                                 places_dict[end_id][0].lng,
-                                 int(epoch_time),
-                                 mode_of_transportation)
+
+        if begin_id == 'starting_location':
+            rv = helper_transit_time(places_dict[begin_id]['lat'],
+                                     places_dict[begin_id]['lng'],
+                                     places_dict[end_id][0].lat,
+                                     places_dict[end_id][0].lng,
+                                     int(epoch_time),
+                                     mode_of_transportation)
+        else:
+            rv = helper_transit_time(places_dict[begin_id][0].lat,
+                                     places_dict[begin_id][0].lng,
+                                     places_dict[end_id][0].lat,
+                                     places_dict[end_id][0].lng,
+                                     int(epoch_time),
+                                     mode_of_transportation)
         past_transit_times[begin_id][end_id][section] = rv
     return rv, past_transit_times
 
 
-def optomize(user_query, places_dict):
+def optimize(user_query, places_dict):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -304,110 +259,183 @@ def optomize(user_query, places_dict):
         places_dict: dict containing place objects, user ratings keyed by place id
     Returns: list of places, list of exceptions, integer
     '''
-    exceptions = []
+    
 
-    #HERE WE ARE SELECTING UP TO 8 PLACES
-    labels = [key for key in places_dict if places_dict[key][1] == 'up']
-    if len(labels) < 8:
-        labels.extend([key for key in places_dict if places_dict[key][1] == 'mid'])
-    labels = labels[:8]
-
-    #print('there are {} places to fit in'.format(len(labels)))
-    running_order = permutations(labels)
-    if user_query.starting_location:
-        cit_lat = user_query.city.city_lat
-        cit_lon = user_query.city.city_lng
-        start_lat = user_query.start_lat
-        start_lon = user_query.start_lng
-        distance = haversine(start_lat, start_lon, cit_lat, cit_lon)
-        if distance < 10000:
+    priority_place_labels = []
+    for key, value in places_dict.values():
+        if value[1] == 'mid':
+            priority_place_labels.append(key)
+        elif value[1] == 'up':
+            priority_place_labels.insert(0,key)
+        elif value[1] == 'down':
             pass
-            #temporarily disabled
-            #running_order.insert(0,'starting_location')
-            #print('included  starting_location')
-    updated_places = prelim_geo_sort(places_dict, running_order, user_query)
-    route = []
-    time = -1
-    past_transit_times = {}
+
     epoch_date = date(1970,1,1)
     seconds_from_epoch = int((user_query.arrival_date - epoch_date).total_seconds())
     time_end = user_query.time_end.hour * 60 + user_query.time_end.minute
-    num_included_places = 2
-    while time < time_end and num_included_places <= len(labels):
-        #print('optomize time', time)
-        last_route, last_time, last_exceptions = route, time, exceptions
-        route, time, past_transit_times, exceptions = get_min_cost(updated_places,
-                                                       user_query,
-                                                       places_dict, 
-                                                       num_included_places,
-                                                       seconds_from_epoch,
-                                                       past_transit_times, exceptions)
-        num_included_places += 1
-    
-    #remember to strip starting location
-    #going to return two lists and an int: ordered places, list of transit exceptions, total transit time in mins
-    #print('return value is:', last_route, last_exceptions, last_time)
-    if user_query.starting_location:
-        route = route[1:]
-    
-    return last_route, last_exceptions, last_time
+    time_begin = user_query.time_start.hour * 60 + user_query.time_start.minute
+    time_window = time_end - time_begin
+    num_included_places = time_window // TRANSIT_CONSTANT[user_query.mode_transportation]
+    print('num included places:', num_included_places)
 
-#####CODE FROM HERE DOWN IS WIP######
-def buiild_matrix(places_dict):
+    priority_place_labels.insert(0,'starting_location')
+
+    past_transit_times = {}
+
+    optimized = False
+
+    #Parse and assign starting location
+    if user_query.starting_location:
+        distance_to_start = haversine(user_query.city.city_lng, user_query.city.city_lat, user_query.start_lng, user_query.start_lat)
+        if distance < 10000:
+            places_dict['starting_location'] = {'lat':user_query.start_lat, 'lng':user_query.start_lng}
+        else:
+            places_dict['starting_location'] = {'lat':user_query.start_lat, 'lng':user_query.start_lng}
+    else:
+        places_dict['starting_location'] = {'lat':user_query.city.city_lat, 'lng':user_query.city.city_lng}
+
+    prev_above_time = False
+    cycle = 0
+    while not optimized:
+        cycle += 1
+        print('cycle',cycle)
+        places_to_include = priority_place_labels[:num_included_places]
+        #temp
+        return places_to_include, [], []
+        path, running_distance = branch_bound(user_query, places_dict, places_to_include)
+        print('path from branch bound',path)
+        print('path to get min cost:',path)
+        #still need to figure out how to reconcile path_from_run with places_to_include
+        path_from_run, time, past_transit_times, exceptions = get_min_cost(path,
+                                                                       user_query,
+                                                                       places_dict,
+                                                                       seconds_from_epoch,
+                                                                       past_transit_times)
+        print('time is',time)
+        print('path from get min cost is:',path_from_run)
+        if time >= time_window:
+            num_included_places -= 1
+            prev_above_time = False
+            print('removed one place')
+        elif time < time_window:
+            print('added one place')
+            num_included_places += 1
+            if prev_above_time:
+                print('set optomized to true')
+                optimized = True
+        if cycle > 20:
+            optimized = True
+    
+    return path_from_run, exceptions, time
+
+
+def branch_bound(user_query, places_dict, places_to_include):
+    '''
+    '''
+    original_matrix = build_matrix(places_to_include, places_dict, user_query)
+
+    running_cost, first_matrix = matrix_reduce(original_matrix.copy(deep=True),0,0,True)
+    running_path = [0]
+    prev_row = 0
+    while len(running_path) < original_matrix.shape[0]:
+        single_round_tracker = []
+        for column in range(original_matrix.shape[0]):
+            if column not in running_path:
+                cost_of_node = matrix_reduce(first_matrix.copy(deep=True),column,prev_row)
+                single_round_tracker.append((cost_of_node, column))
+        sorted_single_round_tracker = sorted(single_round_tracker, key = lambda x: x[0])
+        prev_round_best = sorted_single_round_tracker[0]
+        prev_row = prev_round_best[1]
+        running_path.append(prev_row)
+  
+        
+    final_cost = 0
+    final_running_path = []
+    for i, node in enumerate(running_path):
+        if i != len(running_path) - 1:
+            trip_cost = original_matrix[running_path[i + 1]][node]
+            final_cost += trip_cost
+        final_running_path.append(places_to_include[i])
+    print('final running path from branch bound',final_running_path)        
+
+    return final_running_path, final_cost
+    
+    
+def matrix_reduce(matrix, i, j, first=False):
+    #set ith column, jth row to inf
+    #row reduce, keep track of total subtraction
+    #column reduce, keep track of total subtraction
+    #min cost = previous node's cost + current nodes cost - savings
+    #return min cost
+    INF = math.inf
+    orig_value = matrix[i][j]
+    matrix[j][i] = INF
+    if not first:
+        for i_ in range(matrix.shape[0]): # column
+            matrix[i_][j] = INF
+        for j_ in range(matrix.shape[0]): #row
+            matrix[i][j_] = INF
+    #handle rows
+    row_mins = list(matrix.idxmin(axis=1))
+    row = 0
+    running_sum_a = 0
+    for column in row_mins:
+        if not math.isnan(column):
+            min_value = matrix[column][row]
+            for entry in range(matrix.shape[0]):
+                matrix[entry][row] -= min_value
+            running_sum_a += min_value
+        row += 1
+
+    #handle columns
+    col_mins = list(matrix.idxmin(axis=0))
+    column = 0
+    running_sum_b = 0
+    for row in col_mins:
+        if not math.isnan(row):
+            min_value = matrix[column][row]
+            for entry in range(matrix.shape[0]):
+                matrix[column][entry] -= min_value
+            running_sum_b += min_value
+        column += 1
+    
+    minimized_value = running_sum_a + running_sum_b
+    if first: return minimized_value, matrix
+    minimized_value = orig_value + minimized_value
+    return minimized_value
+
+
+
+
+def build_matrix(labels, places_dict, user_query):
     '''
     To be implemented.
     '''
-    return []
-
-def matrix_reduce(matrix):
-    #handle rows
-    row_mins = list(matrix.idxmin(axis=1))
-    for i, j in enumerate(row_mins):
-        min_value = matrix.iloc[i].loc[j]
-        for entry in range(matrix.shape[0]):
-            matrix.iloc[i].iloc[entry] -= min_value
-    #handle columns
-    col_mins = list(matrix.idxmin(axis=0))
-    for j, i in enumerate(col_mins):
-        min_value = matrix.loc[i].iloc[j]
-        for entry in range(matrix.shape[0]):
-            matrix.iloc[entry].iloc[j] -= min_value
+    INF = math.inf
+    dimension = len(labels)
+    df_rows = []
+    for row in labels:
+        single_row = []
+        for column in labels:
+            if row == column:
+                single_row.append(INF)
+            elif row == 'starting_location':
+                place_b = places_dict[column][0]
+                cit_lat = user_query.city.city_lat
+                cit_lon = user_query.city.city_lng
+                distance = round(haversine(cit_lon, cit_lat, place_b.lng, place_b.lat), 1)
+                single_row.append(distance)
+            elif column == 'starting_location':
+                place_a = places_dict[row][0]
+                cit_lat = user_query.city.city_lat
+                cit_lon = user_query.city.city_lng
+                distance = round(haversine(place_a.lng, place_a.lat, cit_lon, cit_lat),1)
+                single_row.append(distance)
+            else:
+                place_a = places_dict[row][0]
+                place_b = places_dict[column][0]
+                distance = round(haversine(place_a.lng, place_a.lat, place_b.lng, place_b.lat),1)
+                single_row.append(distance)
+        df_rows.append(single_row)
+    matrix = pd.DataFrame(df_rows)
     return matrix
-    
-def tsp(matrix):
-    path = []
-    original_matrix = matrix.copy(deep=True)
-    while matrix.shape[0] > 1:
-        print(matrix)   
-        matrix = matrix_reduce(matrix)
-        penalties = []
-        for i in range(matrix.shape[0]):
-            for j in range(matrix.shape[0]):
-                if matrix.iloc[i,j] == 0:
-                    row = list(matrix.iloc[i])
-                    zero_index = row.index(0)
-                    del row[zero_index]
-                    col = list(matrix.iloc[:,j])
-                    zero_index = col.index(0)
-                    del col[zero_index]
-                    row_min = min(row)
-                    col_min = min(col)
-                    total = row_min + col_min
-                    
-                    penalties.append((total, i, j))
-        penalties = sorted(penalties, key = lambda x: x[0])
-        biggest_penalty = penalties[-1]
-        drop_i, drop_j = biggest_penalty[1], biggest_penalty[2]
-        #get index of drop_i, drop_j
-        drop_i_label = matrix.index[drop_j]
-        drop_j_label = matrix.columns[drop_i]
-        matrix.iloc[drop_i, drop_j] = INF
-        matrix.drop(matrix.columns[drop_i],axis=1,inplace=True)
-
-        matrix.drop(matrix.index[drop_j],inplace=True)
-        path.append((drop_i_label,drop_j_label))
-    running_distance = 0
-    for element in path:
-        dist = original_matrix.loc[element[0], element[1]]
-        running_distance += dist
-    return path, running_distance
