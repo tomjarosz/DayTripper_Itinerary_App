@@ -58,13 +58,12 @@ def index(request):
         #modified places to be a dict. correct implementation?
         places_preferences = {}
 
-        limit = 5
-        counter = 0
+
         for key in second_form_data:
-            if 'ur_' in key and counter < limit:
+            if 'ur_' in key:
+                print('key',key)
                 id_place = key[3:]
                 places_preferences[id_place] = [Place.objects.get(id_str=id_place), second_form_data[key]]
-                counter += 1
 
         optimal_places_order, transit_exceptions, times  = optimize(user_query, places_preferences)
 

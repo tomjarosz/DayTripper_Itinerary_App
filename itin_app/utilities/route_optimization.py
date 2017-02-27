@@ -259,16 +259,13 @@ def optimize(user_query, places_dict):
         places_dict: dict containing place objects, user ratings keyed by place id
     Returns: list of places, list of exceptions, integer
     '''
-    
 
     priority_place_labels = []
-    for key, value in places_dict.values():
+    for key, value in places_dict.items():
         if value[1] == 'mid':
             priority_place_labels.append(key)
         elif value[1] == 'up':
             priority_place_labels.insert(0,key)
-        elif value[1] == 'down':
-            pass
 
     epoch_date = date(1970,1,1)
     seconds_from_epoch = int((user_query.arrival_date - epoch_date).total_seconds())
@@ -276,7 +273,7 @@ def optimize(user_query, places_dict):
     time_begin = user_query.time_start.hour * 60 + user_query.time_start.minute
     time_window = time_end - time_begin
     num_included_places = time_window // TRANSIT_CONSTANT[user_query.mode_transportation]
-    print('num included places:', num_included_places)
+
 
     priority_place_labels.insert(0,'starting_location')
 
@@ -300,8 +297,9 @@ def optimize(user_query, places_dict):
         cycle += 1
         print('cycle',cycle)
         places_to_include = priority_place_labels[:num_included_places]
+        print('places to include',places_to_include)
         #temp
-        return places_to_include, [], []
+        #return places_to_include, [], []
         path, running_distance = branch_bound(user_query, places_dict, places_to_include)
         print('path from branch bound',path)
         print('path to get min cost:',path)
@@ -347,7 +345,6 @@ def branch_bound(user_query, places_dict, places_to_include):
         prev_round_best = sorted_single_round_tracker[0]
         prev_row = prev_round_best[1]
         running_path.append(prev_row)
-  
         
     final_cost = 0
     final_running_path = []

@@ -26,8 +26,8 @@ class Place(models.Model):
     description = models.CharField(max_length = 200, null=True)
     url = models.CharField(max_length = 500, null=True)
 
-    def __str__(self):
-        return str(self.id_str + self.name)
+    #def __str__(self):
+    #    return str(self.id_str + self.name)
 
     def is_open_dow(self, dow):
         return Place_hours.objects.filter(place_id=self.id_str, d_of_w_open=dow).exists()
