@@ -78,29 +78,33 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
     '''
     optimal = None
     best_time = 999999
-    time_start = user_query.time_start.hour * 60 + user_query.time_start.minute
     optimized = False
     cycle = 0
     record_of_imperfect_runs = []
-    exceptions = []
-    while not optimized:   
-        list_of_not_open = [] 
+    while not optimized:
+        list_of_not_open = []
+        time = user_query.time_start.hour * 60 + user_query.time_start.minute
+        exceptions = []   
         all_open = True
-        time = time_start
         priority_score = 0
         for i in range(len(path) - 1):
             begin = path[i]
             end = path[i + 1]
      
             time_string = format_time_string(time)
-            if places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
+            if begin == 'starting_location':
+                pass
+            elif places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
                 priority_score += .5 * places_dict[begin][0].rating
             else:
                 all_open = False 
                 list_of_not_open.append(begin)
-            time += TIME_SPENT[places_dict[begin][0].category]
-            time_string = format_time_string(time)
-            if places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
+            if begin != 'starting_location':
+                time += TIME_SPENT[places_dict[begin][0].category]
+                time_string = format_time_string(time)
+            if begin == 'starting_location':
+                pass
+            elif places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
                 priority_score += .5 * places_dict[begin][0].rating
             else:
                 all_open = False
@@ -302,7 +306,7 @@ def optimize(user_query, places_dict):
         #return places_to_include, [], []
         path, running_distance = branch_bound(user_query, places_dict, places_to_include)
         print('path from branch bound',path)
-        print('path to get min cost:',path)
+
         #still need to figure out how to reconcile path_from_run with places_to_include
         path_from_run, time, past_transit_times, exceptions = get_min_cost(path,
                                                                        user_query,
@@ -314,14 +318,14 @@ def optimize(user_query, places_dict):
         if time >= time_window:
             num_included_places -= 1
             prev_above_time = False
-            print('removed one place')
+            print('too long :removed one place')
         elif time < time_window:
-            print('added one place')
+            print('too short: added one place')
             num_included_places += 1
             if prev_above_time:
-                print('set optomized to true')
+                print('set optomized to true!')
                 optimized = True
-        if cycle > 20:
+        if cycle > 20 or len(path_from_run) < 3:
             optimized = True
     
     return path_from_run, exceptions, time
@@ -352,8 +356,7 @@ def branch_bound(user_query, places_dict, places_to_include):
         if i != len(running_path) - 1:
             trip_cost = original_matrix[running_path[i + 1]][node]
             final_cost += trip_cost
-        final_running_path.append(places_to_include[i])
-    print('final running path from branch bound',final_running_path)        
+        final_running_path.append(places_to_include[i])    
 
     return final_running_path, final_cost
     

@@ -61,7 +61,6 @@ def index(request):
 
         for key in second_form_data:
             if 'ur_' in key:
-                print('key',key)
                 id_place = key[3:]
                 places_preferences[id_place] = [Place.objects.get(id_str=id_place), second_form_data[key]]
 
