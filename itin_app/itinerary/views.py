@@ -4,7 +4,7 @@ from django.db.models import Count
 from .models import Category, City, Place, UserQuery
 
 from utilities.query_parser import parse_city, parse_query
-from utilities.route_optimization import optomize
+from utilities.route_optimization import optimize
 from utilities.places_from_foursquare import places_from_foursquare
 
 import json
@@ -58,12 +58,15 @@ def index(request):
         #modified places to be a dict. correct implementation?
         places_preferences = {}
 
+        limit = 5
+        counter = 0
         for key in second_form_data:
-            if 'ur_' in key:
+            if 'ur_' in key and counter < limit:
                 id_place = key[3:]
                 places_preferences[id_place] = [Place.objects.get(id_str=id_place), second_form_data[key]]
+                counter += 1
 
-        optimal_places_order, transit_exceptions, times  = optomize(user_query, places_preferences)
+        optimal_places_order, transit_exceptions, times  = optimize(user_query, places_preferences)
 
         final_places_list = [Place.objects.get(id_str=id_place) for id_place in optimal_places_order]
 
