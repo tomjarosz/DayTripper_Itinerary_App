@@ -167,8 +167,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 for id_ in list_of_not_open:
                     place = path.pop(path.index(id_))
                     path.insert(random.randint(0,len(path)), place)
-                    matrix = build_matrix(path, places_dict, user_query)
-                    path, running_distance = branch_bound(matrix)
+                    path, running_distance = branch_bound(user_query, places_dict, path)
             else:
                 sorted_record = sorted(record_of_imperfect_runs, key=lambda x: x[0])
                 return sorted_record[-1][1]
