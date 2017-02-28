@@ -1,5 +1,6 @@
 from datetime import datetime, time, timedelta, date
 from math import radians, cos, sin, asin, sqrt
+import math 
 
 from utilities.transit_time import helper_transit_time
 from utilities.weather import *
@@ -367,7 +368,7 @@ def matrix_reduce(matrix, i, j, first=False):
     #column reduce, keep track of total subtraction
     #min cost = previous node's cost + current nodes cost - savings
     #return min cost
-    INF = math.inf
+    INF = float('inf')
     orig_value = matrix[i][j]
     matrix[j][i] = INF
     if not first:
@@ -411,7 +412,7 @@ def build_matrix(labels, places_dict, user_query):
     '''
     To be implemented.
     '''
-    INF = math.inf
+    INF = float('inf')
     dimension = len(labels)
     df_rows = []
     for row in labels:
