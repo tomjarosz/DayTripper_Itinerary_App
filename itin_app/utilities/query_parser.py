@@ -4,12 +4,25 @@ from datetime import datetime, time, timedelta, date
 from geopy.geocoders import Nominatim
 
 def parse_query(initial_form_data, proper_city):
+    '''
+    Function to parse the initial form data. It sets some default values if user's
+    query had missing information
+
+    Inputs: - initial_form_data (QuerySet object)
+            - proper_city (City object)
+
+    Returns: - user_query_obj: Django object for the user's query
+             - user_categories: list of user selected categories
+    '''
     user_query = dict(initial_form_data)
+    
+    #Read user's selected categories, if any
     cat_list = []
     for i in range(1,9):
         if 'cat{}'.format(i) in user_query:
             cat_list.append(str(i))
 
+    #If user didn't make a explicit selection, then assume he wants all 
     if len(cat_list) == 0:
         categories = 'all'
         foursquare_categories = Category.objects.all()
@@ -26,7 +39,7 @@ def parse_query(initial_form_data, proper_city):
     if user_query['arrival_date'][0] == '':
         user_query['arrival_date'] = [(datetime.today() + timedelta(days=1)).date().strftime('%m/%d/%Y')]
     if user_query['mode_transportation'][0] == '' or user_query['mode_transportation'][0] == 'any':
-        user_query['mode_transportation'] = 'driving'
+        user_query['mode_transportation'][0] = 'driving'
 
     user_query['time_start'] = user_query['time_frame'][0].split(' - ')[0]
     user_query['time_end'] = user_query['time_frame'][0].split(' - ')[1]
@@ -45,7 +58,7 @@ def parse_query(initial_form_data, proper_city):
         time_start = user_query.get('time_start'),
         time_end = user_query.get('time_end'),
         category_ids = categories,
-        mode_transportation = user_query.get('mode_transportation'), 
+        mode_transportation = user_query.get('mode_transportation')[0], 
         starting_location = user_query.get('start_location')[0],
         start_lat = start_lat,
         start_lng = start_lng)

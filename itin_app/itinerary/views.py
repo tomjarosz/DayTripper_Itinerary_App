@@ -65,7 +65,7 @@ def index(request):
                 places_preferences[id_place] = [Place.objects.get(id_str=id_place), second_form_data[key]]
 
         optimal_places_order, transit_exceptions, times  = optimize(user_query, places_preferences)
-
+        print(optimal_places_order)
         final_places_list = [Place.objects.get(id_str=id_place) for id_place in optimal_places_order]
 
         context['final_places_list'] = final_places_list
