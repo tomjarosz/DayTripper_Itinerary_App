@@ -67,7 +67,7 @@ def haversine(lon1, lat1, lon2, lat2):
     return m 
 
 
-def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit_times):
+def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit_times,verbose=False):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -92,11 +92,12 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
         all_open = True
         priority_score = 0
         for i in range(len(path) - 1):
+            if verbose: print('time at beginning of first node',time)
             round_exceptions = []
             begin = path[i]
             end = path[i + 1]
             if end == 'starting_location':
-                print('\nbegin is end?\n')
+                if verbose: print('\nbegin is end?\n')
             time_string = format_time_string(time)
             if begin == 'starting_location':
                 pass
@@ -107,6 +108,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 list_of_not_open.append(begin)
             if begin != 'starting_location':
                 time += TIME_SPENT[places_dict[begin][0].category]
+                if verbose: print('time after time spent is',time)
                 time_string = format_time_string(time)
             if begin == 'starting_location':
                 pass
@@ -129,7 +131,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                                                    mode_of_transportation)
                 if round_exceptions:
                     exceptions.append(round_exceptions)
-
+            if verbose: print('transit minutes were',transit_seconds / 60)
             time += transit_seconds / 60
         #If everything was open the first time, its easy.
         if all_open:
@@ -137,9 +139,10 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
         #Otherwise, lets randomize the order of the closed places and see if
         #that fixes the issue.
         else:
-            if cycle < 3:
+            if verbose: print('not all open')
+            if cycle == 0:
                 record_of_imperfect_runs.append((priority_score, [path, time, past_transit_times, exceptions]))
-                cycle += 1
+                cycle = 1
                 for id_ in list_of_not_open:
                     place = path.pop(path.index(id_))
                     path.insert(random.randint(1,len(path)), place)
@@ -149,7 +152,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 return sorted_record[-1][1]
 
 
-def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=False):
+def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=True):
     '''
     Determine if there is a more efficient mode of transport to recommend 
     to the user.
@@ -311,6 +314,7 @@ def optimize(user_query, places_dict,verbose=False):
     time_end = user_query.time_end.hour * 60 + user_query.time_end.minute
     time_begin = user_query.time_start.hour * 60 + user_query.time_start.minute
     time_window = time_end - time_begin
+    if verbose: print('mode of transportation',user_query.mode_transportation)
     num_included_places = time_window // TRANSIT_CONSTANT[user_query.mode_transportation]
     priority_place_labels.insert(0,'starting_location')
 
@@ -329,7 +333,7 @@ def optimize(user_query, places_dict,verbose=False):
 
     prev_above_time = False
     cycle = 0
-    
+    if verbose: print('time window is:',time_window)
     #main loop
     while not optimized:
         cycle += 1
@@ -349,11 +353,11 @@ def optimize(user_query, places_dict,verbose=False):
                                                                        past_transit_times)
         if verbose: print('time is',time)
         if verbose: print('path from get min cost is:',path_from_run)
-        if time >= time_window:
+        if time >= time_end:
             num_included_places -= 1
             prev_above_time = False
             if verbose: print('too long :removed one place')
-        elif time < time_window:
+        elif time < time_end:
             if verbose: print('too short: added one place')
             num_included_places += 1
             if prev_above_time:
