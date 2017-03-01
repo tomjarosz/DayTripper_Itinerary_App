@@ -38,7 +38,8 @@ TIME_SPENT = {'50aaa49e4b90af0d42d5de11' : 150,
               '52e81612bcbc57f1066b7a13' : 170,
               '4bf58dd8d48988d1e9941735' : 300,
               '56aa371be4b08b9a8d573511' : 90,
-              '4bf58dd8d48988d15a941735' : 120
+              '4bf58dd8d48988d15a941735' : 120,
+              '4bf58dd8d48988d17b941735' : 100
 }
 
 TRANSIT_CONSTANT = {'driving' : 100,
