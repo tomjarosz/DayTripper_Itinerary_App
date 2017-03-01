@@ -107,7 +107,11 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 all_open = False 
                 list_of_not_open.append(begin)
             if begin != 'starting_location':
-                time += TIME_SPENT[places_dict[begin][0].category]
+                category = places_dict[begin][0].category
+                if category in TIME_SPENT.keys():
+                    time += TIME_SPENT[category]
+                else:
+                    time += 45
                 if verbose: print('time after time spent is',time)
                 time_string = format_time_string(time)
             if begin == 'starting_location':
@@ -152,7 +156,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 return sorted_record[-1][1]
 
 
-def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=True):
+def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=False):
     '''
     Determine if there is a more efficient mode of transport to recommend 
     to the user.
@@ -353,7 +357,7 @@ def optimize(user_query, places_dict,verbose=False):
                                                                        past_transit_times)
         if verbose: print('time is',time)
         if verbose: print('path from get min cost is:',path_from_run)
-        if time >= time_end:
+        if time > time_end:
             num_included_places -= 1
             prev_above_time = False
             if verbose: print('too long :removed one place')
@@ -363,8 +367,11 @@ def optimize(user_query, places_dict,verbose=False):
             if prev_above_time:
                 if verbose: print('set optomized to true!')
                 optimized = True
+        elif time >= (time_end - 60) or time <= (time_end + 60):
+            optimized = True
         if cycle > 20 or len(path_from_run) < 3:
             optimized = True
+    path_from_run = path_from_run[1:]
     print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path_from_run, exceptions, time))
     return path_from_run, exceptions, time
 

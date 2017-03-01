@@ -3,6 +3,7 @@ import urllib.request
 import requests
 import time
 import math
+import base64
 
 
 def get_weather(time, lon, lat):
@@ -15,6 +16,8 @@ def get_weather(time, lon, lat):
 	'''
 	if not time: time = int(time.time())
 	api_key = 'ed3caae2cf05f6088ec1bd57afb153a8'
+	encoded_key = b'ZWQzY2FhZTJjZjA1ZjYwODhlYzFiZDU3YWZiMTUzYTg='
+	api_key = str(base64.standard_b64decode(encoded_key))
 
 	base_url = 'https://api.darksky.net/forecast/'
 	
