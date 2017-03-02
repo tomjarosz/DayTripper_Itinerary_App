@@ -129,9 +129,9 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                                                                         mode_of_transportation)
 
             #see if more efficient modes of transit exist
-            if transit_seconds > 1800 and mode_of_transportation != 'driving':
+            if transit_seconds > 1200 and mode_of_transportation != 'driving':
                 round_exceptions = find_exceptions(begin, end, places_dict,
-                                                   transit_seconds, epoch_time,
+                                                   transit_seconds, seconds_from_epoch,
                                                    mode_of_transportation)
                 if round_exceptions:
                     exceptions.append(round_exceptions)
@@ -169,8 +169,7 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_o
         mode_of_transportation: string
     Returns: tuple or None
     '''
-    if verbose: print('\n::::triggered exceptions:::::\n')
-    REDUCTION_THRESHOLD = .5
+    REDUCTION_THRESHOLD = .65
 
     if mode_of_transportation != 'transit':
         new_type = 'transit'
@@ -291,7 +290,6 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
                                      int(epoch_time),
                                      mode_of_transportation)
         else:
-            #somehow 'starting_location is getting into here and clogging up the gears'
             rv = helper_transit_time(places_dict[begin_id][0].lat,
                                      places_dict[begin_id][0].lng,
                                      places_dict[end_id][0].lat,
@@ -312,6 +310,8 @@ def optimize(user_query, places_dict,verbose=True):
     Returns: list of place strings, list of exception strings, integer
     '''
     #Determine which places to include based on user's indicated preferences.
+    print('places_dict',places_dict)
+
     priority_place_labels = []
     for key, value in places_dict.items():
         if value[1] == 'mid':
@@ -374,14 +374,18 @@ def optimize(user_query, places_dict,verbose=True):
         elif time < time_end:
             if verbose: print('too short: added one place')
             num_included_places += 1
+            #finish if switched from over time to under time in last iteration
             if prev_above_time:
                 if verbose: print('previously above time. set optomized to true!')
                 optimized = True
+        #finish if close enough to ending time
         if time >= (time_end - 60) and time <= (time_end + 60):
             print('time was within allowance. set optimized to true')
             if verbose: optimized = True
-        if cycle > 20 or len(path_from_run) < 3:
+        #finish if corner case
+        if cycle > 20:
             optimized = True
+        #finish if the route can fit all places within the time limit
         if len(path_from_run) == len(places_dict.keys()) and time <= time_end:
             optimized = True
     path_from_run = path_from_run[1:]
