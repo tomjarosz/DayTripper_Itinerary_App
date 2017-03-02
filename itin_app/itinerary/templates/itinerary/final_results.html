@@ -2,24 +2,79 @@
 
 {% block title %}
 
-These are the final results
-<table style="width:50%">
+Here is your itinerary!
+<table style="width:60%">
   <tr>
-    <th>Photo</th>
+    <th> </th>
     <th>Place name</th>
-    <th>Latitude</th>
-    <th>Longitude</th>
+    <th>Address</th>
   </tr>
-  
     {% for place in final_places_list %}
     <tr>
-    <td><img src="{{ place.url }}" style="width:120px;height:120px;">
+    <td><img src="{{ place.0 }}" style="width:120px;height:120px;">
     </td>
-    <td>{{ place.name }}</td>
-    <td>{{ place.lat }}</td>
-    <td>{{ place.lng }}</td>
-
+    <td>{{ place.1 }}</td>
+    <td>{{ place.5 }}</td>
     </tr>      
     {% endfor %}
 </table>
+
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>DayTripper Itinerary</title>
+    <style>
+
+      #map {
+        height: 100%;
+      }
+      html, body {
+        height: 90%;
+        margin: 10;
+        padding: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 10,
+          // center: {lat: 39.50, lng: -98.35}
+        });
+
+        var bounds = new google.maps.LatLngBounds();
+
+        {% for place in final_places_list %} 
+        var point = new google.maps.LatLng({{place.2}},{{place.3}});
+        bounds.extend(point);
+        var marker = new google.maps.Marker({
+            position: point,
+            map: map,
+            icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld='+ {{place.6}} +'|FF776B|000000'
+        });
+            marker['infowindow']  = new google.maps.InfoWindow({
+                content: "<h1>{{place.1}}</h1> <br> {{ place.5 }} <br> {{ place.7 }} <br> {{ place.8 }}",
+        });
+            google.maps.event.addListener(marker, 'click', function() {
+                 this['infowindow'].open(map, this);
+            });
+           google.maps.event.addListener(marker, 'mouseover', function() {
+                    });
+           google.maps.event.addListener(marker, 'mouseout', function() {
+            });
+        {% endfor %} 
+        map.fitBounds(bounds);
+        }
+
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8&callback=initMap">
+    </script>
+  </body>
+</html>
+
 {% endblock %}

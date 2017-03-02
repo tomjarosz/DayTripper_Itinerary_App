@@ -84,4 +84,23 @@ def index(request):
         context['transit_exceptions'] = transit_exceptions
         context['times'] = times
 
+        output_return = []
+        counter = 1
+
+        for place in context['final_places_list']:
+            location_list = []
+            location_list.append(place.url)
+            location_list.append(place.name)
+            location_list.append(place.lat)
+            location_list.append(place.lng)
+            location_list.append(place.id_str)
+            location_list.append(place.address)
+            location_list.append(counter)
+            location_list.append(place.city)
+            location_list.append(place.postal_code)
+            output_return.append(location_list)
+            counter+= 1
+
+        context['final_places_list'] = output_return
+        # print(output_return)
         return render(request, 'itinerary/final_results.html', context)
