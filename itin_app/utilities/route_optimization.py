@@ -9,7 +9,6 @@ from utilities.weather import *
 import pandas as pd
 import random
 
-##from here down is the former 'route_optomization file, which has been moved to here. it is a WIP'
 
 TIME_SPENT = {'50aaa49e4b90af0d42d5de11' : 150,
               '4bf58dd8d48988d15d941735' : 45,
@@ -157,7 +156,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 return sorted_record[-1][1]
 
 
-def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=False):
+def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=True):
     '''
     Determine if there is a more efficient mode of transport to recommend 
     to the user.
@@ -279,6 +278,12 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
 
     if not rv:
         if begin_id == 'starting_location':
+            print('caused error before::::\n',places_dict[begin_id]['lat'],
+                                     places_dict[begin_id]['lng'],
+                                     places_dict[end_id][0].lat,
+                                     places_dict[end_id][0].lng,
+                                     int(epoch_time),
+                                     mode_of_transportation,'\n:::::end of caused error before')
             rv = helper_transit_time(places_dict[begin_id]['lat'],
                                      places_dict[begin_id]['lng'],
                                      places_dict[end_id][0].lat,
@@ -297,7 +302,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
     return rv, past_transit_times
 
 
-def optimize(user_query, places_dict,verbose=False):
+def optimize(user_query, places_dict,verbose=True):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -322,33 +327,37 @@ def optimize(user_query, places_dict,verbose=False):
     if verbose: print('mode of transportation',user_query.mode_transportation)
     num_included_places = time_window // TRANSIT_CONSTANT[user_query.mode_transportation]
     priority_place_labels.insert(0,'starting_location')
-
+    if verbose: print('started with {} places'.format(num_included_places))
     past_transit_times = {}
     optimized = False
 
     #Parse and assign starting location
     if user_query.starting_location:
+        if verbose: print('user did enter a starting location')
         start_dist = haversine(user_query.city.city_lng, user_query.city.city_lat, user_query.start_lng, user_query.start_lat)
-        if start_distance < 10000:
+        if start_dist < 10000:
+            if verbose: print('used users starting location, lat{} and lon{}'.format(user_query.start_lat, user_query.start_lng))
             places_dict['starting_location'] = {'lat':user_query.start_lat, 'lng':user_query.start_lng}
         else:
+            if verbose: print('used default starting location')
             places_dict['starting_location'] = {'lat':user_query.start_lat, 'lng':user_query.start_lng}
     else:
+        if verbose: print('user did not enter a starting location')
+        if verbose: print('used default starting location')
         places_dict['starting_location'] = {'lat':user_query.city.city_lat, 'lng':user_query.city.city_lng}
 
     prev_above_time = False
     cycle = 0
-    if verbose: print('time window is:',time_window)
+    if verbose: print('time window is:{}-{}, which is {} minutes long'.format(time_begin,time_end,time_window))
     #main loop
     while not optimized:
         cycle += 1
         if verbose: print('cycle',cycle)
         places_to_include = priority_place_labels[:num_included_places]
-        if verbose: print('places to include',places_to_include)
         #temp
         #return places_to_include, [], []
         path, running_distance = branch_bound(user_query, places_dict, places_to_include)
-        if verbose: print('path from branch bound',path)
+        #if verbose: print('path from branch bound',path)
 
         #still need to figure out how to reconcile path_from_run with places_to_include
         path_from_run, time, past_transit_times, exceptions = get_min_cost(path,
@@ -366,13 +375,17 @@ def optimize(user_query, places_dict,verbose=False):
             if verbose: print('too short: added one place')
             num_included_places += 1
             if prev_above_time:
-                if verbose: print('set optomized to true!')
+                if verbose: print('previously above time. set optomized to true!')
                 optimized = True
-        elif time >= (time_end - 60) or time <= (time_end + 60):
-            optimized = True
+        if time >= (time_end - 60) and time <= (time_end + 60):
+            print('time was within allowance. set optimized to true')
+            if verbose: optimized = True
         if cycle > 20 or len(path_from_run) < 3:
             optimized = True
+        if len(path_from_run) == len(places_dict.keys()) and time <= time_end:
+            optimized = True
     path_from_run = path_from_run[1:]
+    print('\ntime end was: {}'.format(time_end))
     print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path_from_run, exceptions, time))
     return path_from_run, exceptions, time
 
