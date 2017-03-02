@@ -107,13 +107,16 @@ def get_place_from_place_dict(place_dict, city_id, category):
     return place_obj
 
 
-def places_from_foursquare(user_query, user_categories):
+def places_from_foursquare(user_query, user_categories, multi=True):
     city_obj = user_query.city
 
-    user_dow = datetime.strptime(user_query.arrival_date, r'%Y-%m-%d').date().weekday() + 1
+    user_dow = user_query.arrival_date.weekday() + 1
 
     list_of_places = []
     nlimit = 10-int(len(user_categories)/6)
+
+    time_start = datetime.now()
+
     for category in user_categories:
         #check if we have category and city, and add those places to list of places
         if Place.objects.filter(category=category, city=city_obj).exists():
@@ -139,17 +142,25 @@ def places_from_foursquare(user_query, user_categories):
 
         #here we do the multiprocessing!
         db.connections.close_all()
-        with Pool(processes=4) as pool:
-            processed_places = pool.map(
-                partial(get_place_from_place_dict, city_id=city_obj.pk, category=category), 
-                list_of_places_dict)
-    
+        if multi:
+            with Pool(processes=4) as pool:
+                processed_places = pool.map(
+                    partial(get_place_from_place_dict, city_id=city_obj.pk, category=category), 
+                    list_of_places_dict)
+        else:
+            processed_places = []
+            for place_dict in list_of_places_dict:
+                place_out = get_place_from_place_dict(place_dict, city_obj.pk, category)
+                processed_places.append(place_out)
+
         # for place in processed_places:
         #     place.save()
 
         list_of_places.extend([(place.checkins, place.id_str) for place in processed_places if place])
 
-
+    elapsed_time = datetime.now() - time_start
+    print(elapsed_time)
+    
     final_list = []
     
     for _, place_id_str in sorted(list_of_places, reverse=True):

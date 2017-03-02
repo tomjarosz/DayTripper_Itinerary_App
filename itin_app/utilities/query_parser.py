@@ -49,10 +49,13 @@ def parse_query(initial_form_data, proper_city):
     else:
         start_lat, start_lng = helper_check_address(user_query['start_location'][0])
 
-    arrival_date = datetime.strptime(user_query.get('arrival_date')[0], r'%m/%d/%Y').date().strftime('%Y-%m-%d')
+    arrival_date = datetime.strptime(user_query.get('arrival_date')[0], r'%m/%d/%Y').date()
+    # print(arrival_date)
+    # print(type(arrival_date))
+    #.strftime('%Y-%m-%d')
     
     user_query_obj = UserQuery(
-        query_city = user_query.get('query_city'),
+        query_city = user_query.get('query_city')[0],
         city = proper_city,   
         arrival_date = arrival_date,
         time_start = user_query.get('time_start'),
@@ -80,27 +83,42 @@ def parse_city(query_city):
         return City.objects.order_by('?')[0]
 
     #Case 1: user most likely clicked in one of the options
-    if ", " in query_city:
-        city_name, country_name = query_city.split(", ")
+    split_query_city = query_city.split(", ")
+    if len(split_query_city) == 2:
+        city_name, country_name = split_query_city
 
         if City.objects.filter(city_name=city_name, country_name=country_name).exists():
             city = City.objects.get(city_name=city_name, country_name=country_name)
             return city
-        
+    elif len(split_query_city) == 3:
+        city_name, state, country_name = split_query_city
+
+        if City.objects.filter(city_name=city_name, state=state, country_name=country_name).exists():
+            city = City.objects.get(city_name=city_name, state=state, country_name=country_name)
+            return city
+
+    #Case 2. Up to this point, we couldn't match user info with data. Now find the new city!
     geolocator = Nominatim()
     location = geolocator.geocode(query_city)
     reverse_location = geolocator.reverse('{}, {}'.format(location.latitude, location.longitude))
     address = reverse_location.raw['address']
   
     if 'city' in address:
-        #Case 2. user enters the string, despite of us already having it in our data
-        if City.objects.filter(city_name=address['city'], country_name=address['country']).exists():
-            city = City.objects.get(city_name=address['city'], country_name=address['country'])
+        if 'state' not in address:
+            state = ''
+        else:
+            state = address['state']
+
+        print(address.items())
+        #We do this, just in case we do have the data
+        if City.objects.filter(city_name=address['city'], state=state, country_name=address['country']).exists():
+            city = City.objects.get(city_name=address['city'], state=state, country_name=address['country'])
             return city
         
-        #Case 3. new city
+        #Now we store the new city
         city = City(
             city_name=address['city'], 
+            state=state,
             country_name=address['country'],
             city_lat = location.latitude,
             city_lng = location.longitude)

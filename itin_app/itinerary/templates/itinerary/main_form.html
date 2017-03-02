@@ -6,7 +6,7 @@
   $( function() {
     var availableTags = [
     {% for city in cities %}
-       "{{ city.city_name }}, {{ city.country_name }}" ,
+       "{{ city.city_name }}, {% if city.state %} {{ city.state }},{% endif %} {{ city.country_name }}" ,
     {% endfor %}
     "I don't know"
     ];
@@ -60,11 +60,11 @@
     {% csrf_token %}
     <p>
     City to visit:
-    <input id="tags" name="query_city">
+    <input id="tags" name="query_city" value="{{ user_query.query_city }}">
     </p>
     <p>
     Day of visit:
-    <input type="text" id="datepicker" name="arrival_date">
+    <input type="text" id="datepicker" name="arrival_date" value="{{ user_query.arrival_date|date:'m/d/Y' }}">
     </p>
     <p>
     Start-end time:
@@ -89,7 +89,7 @@
     </p>
     <p>
     Starting location (address):
-    <input type="text" name="start_location">
+    <input type="text" name="start_location" value="{{ user_query.starting_location }}">
     </p>
 
  <br>

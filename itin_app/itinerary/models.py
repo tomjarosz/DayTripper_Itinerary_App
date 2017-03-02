@@ -5,6 +5,7 @@ from django.utils import timezone
 
 class City(models.Model):
     city_name = models.CharField(max_length=200)
+    state = models.CharField(max_length=200, null=True)
     country_name = models.CharField(max_length=200)
     city_lat = models.FloatField()
     city_lng = models.FloatField()
@@ -13,6 +14,7 @@ class City(models.Model):
         return str(self.city_name + ", " + self.country_name)
 
 class Place(models.Model):
+    store_date = models.DateField(auto_now_add=True)
     id_str = models.CharField(max_length=200, primary_key=True)
     name = models.CharField(max_length=200)
     address = models.CharField(max_length=200)
