@@ -1,4 +1,9 @@
-{% block title %}These are the first user results:
+<font face="Tahoma, Geneva, sans-serif", size=7
+<h1><a href="http://127.0.0.1:8000/itinerary">DayTripper</a></h1>
+</font>
+<br>
+<br>
+These are the first user results:
 
     <form action="{% url 'itinerary:index' %}" method="get">
     {% csrf_token %}
@@ -23,7 +28,7 @@
             <td>                 
                 <select name="ur_{{ place.id_str }}">
                     <option value="up">Like it</option>
-                    <option value="mid" selected="selected">Indiferent</option>
+                    <option value="mid" selected="selected">Indifferent</option>
                     <option value="down">Don't like it</option>
                 </select>
                 </td>
@@ -33,5 +38,6 @@
     <input type="submit" value="Send2" />
     </form>
 
-This is the query id: {{ query_id }}
-{% endblock %}
+    <hr>
+    <p>This is the query id: {{ query_id }}</p>
+</font>
