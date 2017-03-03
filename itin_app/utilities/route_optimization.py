@@ -295,7 +295,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
     return rv, past_transit_times
 
 
-def optimize(user_query, places_dict,verbose=False,quick_sort=True):
+def optimize(user_query, places_dict,verbose=False,quick_sort=False):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -391,7 +391,7 @@ def optimize(user_query, places_dict,verbose=False,quick_sort=True):
     
     print('\n'*2)
 
-    if not quick_sort: 
+    if not quick_sort and len(path_from_run) < 7: 
         slow_sorted =slow_sort(places_dict, path_from_run)
         return slow_sorted, exceptions, time
     else:
@@ -563,7 +563,7 @@ def slow_sort(places_dict, running_order):
     '''
 
     distance_matrix = {}
-
+    order_len = len(running_order) - 1
     for item_a in running_order:
         for item_b in running_order:
             if item_a != item_b and item_b != 'starting_location':
@@ -580,21 +580,17 @@ def slow_sort(places_dict, running_order):
     rv = []
     for element in running_order:
         running_distance = 0
-        for i in range(len(element) - 1):
+        for i in range(order_len):
             if running_distance < best_cost:
                 id_0 = element[i]
-                id_1 = element[i + 1]
-                if id_0 == 'starting_location':
-                    lon_0 = user_query.start_lng
-                    lat_0 = user_query.start_lat
-                else:    
-                    lon_0 = places_dict[id_0][0].lng
-                    lat_0 = places_dict[id_0][0].lat
+                id_1 = element[i + 1]  
+                lon_0 = places_dict[id_0][0].lng
+                lat_0 = places_dict[id_0][0].lat
                 lon_1 = places_dict[id_1][0].lng
                 lat_1 = places_dict[id_1][0].lat
                 distance = distance_matrix[id_0][id_1]
                 running_distance += distance
-                if i == len(element) - 2:
+                if i == order_len - 1:
                     if running_distance < best_cost:
                         best_cost = running_distance
                         best_path = element
