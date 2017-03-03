@@ -1,3 +1,4 @@
+<title>DayTripper</title>
 <head>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -53,7 +54,9 @@
 </head> 
 
 <h1><a href="http://127.0.0.1:8000/itinerary">Welcome to DayTripper</a></h1>
-
+<p>DayTripper helps you  make the most out of your limited time in an unfamiliar place. <br>
+Discover exciting spots which match your personal interests and navigate your way through any city <br>
+as while avoiding traffic and getting the most out of your time.</p>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
 <form action="{% url 'itinerary:index' %}" method="post">
@@ -101,5 +104,5 @@
 
 {% block title %}
     <hr>
-    <p>Thanks for visiting my site.</p>
+    <p>Thanks for visiting my site. DayTripper is powered by Google Maps, Foursquare and DarkSky.</p>
 {% endblock %}

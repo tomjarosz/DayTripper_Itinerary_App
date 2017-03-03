@@ -80,8 +80,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
         past_transit_times: dict
     Return: list of strings, integer, int/None, dict
     '''
-    optimal = None
-    best_time = 999999
+    if verbose: print('triggered get min cost')
     optimized = False
     cycle = 0
     record_of_imperfect_runs = []
@@ -102,7 +101,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
             if begin == 'starting_location':
                 pass
             elif places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
-                priority_score += .5 * places_dict[begin][0].rating
+                priority_score += .5 * places_dict[begin][1]
             else:
                 all_open = False 
                 list_of_not_open.append(begin)
@@ -117,7 +116,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
             if begin == 'starting_location':
                 pass
             elif places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
-                priority_score += .5 * places_dict[begin][0].rating
+                priority_score += .5 * places_dict[begin][1]
             else:
                 all_open = False
                 list_of_not_open.append(begin)
@@ -143,10 +142,11 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
         #Otherwise, lets randomize the order of the closed places and see if
         #that fixes the issue.
         else:
-            if verbose: print('not all open')
-            if cycle == 0:
-                record_of_imperfect_runs.append((priority_score, [path, time, past_transit_times, exceptions]))
-                cycle = 1
+            if verbose: print('not all open\npriority score was',priority_score)
+            
+            if cycle < 3:
+                record_of_imperfect_runs.append((priority_score , [path, time, past_transit_times, exceptions]))
+                cycle += 1
                 for id_ in list_of_not_open:
                     place = path.pop(path.index(id_))
                     path.insert(random.randint(1,len(path)), place)
@@ -156,7 +156,8 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
                 return sorted_record[-1][1]
 
 
-def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=True):
+
+def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation,verbose=False):
     '''
     Determine if there is a more efficient mode of transport to recommend 
     to the user.
@@ -277,12 +278,6 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
 
     if not rv:
         if begin_id == 'starting_location':
-            print('caused error before::::\n',places_dict[begin_id]['lat'],
-                                     places_dict[begin_id]['lng'],
-                                     places_dict[end_id][0].lat,
-                                     places_dict[end_id][0].lng,
-                                     int(epoch_time),
-                                     mode_of_transportation,'\n:::::end of caused error before')
             rv = helper_transit_time(places_dict[begin_id]['lat'],
                                      places_dict[begin_id]['lng'],
                                      places_dict[end_id][0].lat,
@@ -300,7 +295,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
     return rv, past_transit_times
 
 
-def optimize(user_query, places_dict,verbose=True):
+def optimize(user_query, places_dict,verbose=False):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -316,8 +311,10 @@ def optimize(user_query, places_dict,verbose=True):
     for key, value in places_dict.items():
         if value[1] == 'mid':
             priority_place_labels.append(key)
+            places_dict[key] = [value[0], 1]
         elif value[1] == 'up':
             priority_place_labels.insert(0,key)
+            places_dict[key] = [value[0], 3]
 
     epoch_date = date(1970,1,1)
     seconds_from_epoch = int((user_query.arrival_date - epoch_date).total_seconds())
