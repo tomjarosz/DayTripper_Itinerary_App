@@ -391,6 +391,7 @@ def optimize(user_query, places_dict,verbose=False,quick_sort=False):
     
     print('\n'*2)
 
+    #this is a little rough atm
     if not quick_sort and len(path_from_run) < 7: 
         slow_sorted =slow_sort(places_dict, path_from_run)
         return slow_sorted, exceptions, time
@@ -578,6 +579,7 @@ def slow_sort(places_dict, running_order):
     best_cost = float('inf')
     best_path = []
     rv = []
+    count = 0
     for element in running_order:
         running_distance = 0
         for i in range(order_len):
@@ -591,9 +593,10 @@ def slow_sort(places_dict, running_order):
                 distance = distance_matrix[id_0][id_1]
                 running_distance += distance
                 if i == order_len - 1:
+                    count += 1
                     if running_distance < best_cost:
                         best_cost = running_distance
                         best_path = element
-
+    print('calculated {} % of full paths'.format(round((count / len(running_order)) * 100), 3))
 
     return best_path
