@@ -3,6 +3,7 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  
   <script>
   $( function() {
     var availableTags = [
@@ -52,17 +53,37 @@
   } );
   </script>
 </head> 
+<title>Welcome to DayTripper</title>
 
+<<<<<<< HEAD
 <h1><a href="http://127.0.0.1:8000/itinerary">Welcome to DayTripper</a></h1>
 <p>DayTripper helps you  make the most out of your limited time in an unfamiliar place. <br>
 Discover exciting spots which match your personal interests and navigate your way through any city <br>
 as while avoiding traffic and getting the most out of your time.</p>
+=======
+<font face="Tahoma, Geneva, sans-serif", size=7
+<h1><a href="http://127.0.0.1:8000/itinerary">DayTripper</a></h1>
+</font>
+>>>>>>> 84a09d7bb52a84f5d467cfb7e168d53ffd52a6bf
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
 <form action="{% url 'itinerary:index' %}" method="post">
     {% csrf_token %}
+    <font face="Tahoma, Geneva, sans-serif"
+    <p><b>
+    <br>
+    Let's start off by getting some information about what your schedule and 
+    <br>transportation looks like as well as the types of places you want to visit.
+    <br> 
+    <br>
+    Simply fill out the fields below... 
+    <br>
+    <br>
+    </b>
+    </p>
+
     <p>
-    City to visit:
+    City to visit*:
     <input id="tags" name="query_city" value="{{ user_query.query_city }}">
     </p>
     <p>
@@ -76,8 +97,9 @@ as while avoiding traffic and getting the most out of your time.</p>
     </p>
     <p>
     Search by categories:
+    <br>
     {% for category in categories %}
-    <input type="checkbox" name="cat{{ category.user_cat_id }}" value="{{ category.user_cat_id }}" /> {{ category.user_category }} 
+    <input type="checkbox" name="cat{{ category.user_cat_id }}" value="{{ category.user_cat_id }}" /> {{ category.user_category }} <br>
     {% endfor %}
     </p>
     <p>
@@ -104,5 +126,11 @@ as while avoiding traffic and getting the most out of your time.</p>
 
 {% block title %}
     <hr>
+<<<<<<< HEAD
     <p>Thanks for visiting my site. DayTripper is powered by Google Maps, Foursquare and DarkSky.</p>
 {% endblock %}
+=======
+    <p>Thanks for visiting my site.</p>
+{% endblock %}
+</font>
+>>>>>>> 84a09d7bb52a84f5d467cfb7e168d53ffd52a6bf
