@@ -140,7 +140,7 @@ def get_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transit
         if all_open:
             return path, time, past_transit_times, exceptions
         #Otherwise, lets randomize the order of the closed places and see if
-        #that fixes the issue.
+        #that fixes the issue. 
         else:
             if verbose: print('not all open\npriority score was',priority_score)
             
@@ -295,7 +295,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
     return rv, past_transit_times
 
 
-def optimize(user_query, places_dict,verbose=False):
+def optimize(user_query, places_dict,verbose=False,quick_sort=True):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -377,8 +377,8 @@ def optimize(user_query, places_dict,verbose=False):
                 optimized = True
         #finish if close enough to ending time
         if time >= (time_end - 60) and time <= (time_end + 60):
-            print('time was within allowance. set optimized to true')
-            if verbose: optimized = True
+            if verbose: print('time was within allowance. set optimized to true')
+            optimized = True
         #finish if corner case
         if cycle > 20:
             optimized = True
@@ -386,9 +386,16 @@ def optimize(user_query, places_dict,verbose=False):
         if len(path_from_run) == len(places_dict.keys()) and time <= time_end:
             optimized = True
     path_from_run = path_from_run[1:]
-    print('\ntime end was: {}'.format(time_end))
-    print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path_from_run, exceptions, time))
-    return path_from_run, exceptions, time
+    if verbose: print('\ntime end was: {}'.format(time_end))
+    if verbose: print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path_from_run, exceptions, time))
+    
+    print('\n'*2)
+
+    if not quick_sort: 
+        slow_sorted =slow_sort(places_dict, path_from_run)
+        return slow_sorted, exceptions, time
+    else:
+        return path_from_run, exceptions, time
 
 
 def branch_bound(user_query, places_dict, places_to_include):
@@ -527,3 +534,70 @@ def build_matrix(labels, places_dict, user_query):
 
 
 
+def permutations(p):
+    '''
+    Given a list of characters, find every combination.
+    Input:
+        p: list of strings
+    Returns: list of strings
+    '''
+    if len(p) == 1:
+        return [p]
+    else:
+        rv = []
+        for x in p:
+            p_minus_x = [i for i in p if i != x]
+            perms = permutations(p_minus_x)
+            for perm in perms:
+                rv.append([x] + perm)
+    return rv
+
+
+def slow_sort(places_dict, running_order):
+    '''
+    Provides a preliminary ranking of node routes based on geographic distance.
+    Inputs:
+        places: dict
+        labels: list of list of strings
+    Returns: list of list of strings
+    '''
+
+    distance_matrix = {}
+
+    for item_a in running_order:
+        for item_b in running_order:
+            if item_a != item_b and item_b != 'starting_location':
+                distance = haversine(places_dict[item_a][0].lng, places_dict[item_a][0].lat,
+                                     places_dict[item_b][0].lng, places_dict[item_b][0].lat)
+                if item_a in distance_matrix.keys():
+                    distance_matrix[item_a][item_b] = distance
+                else:
+                    distance_matrix[item_a] = {item_b:distance}
+
+    running_order = permutations(running_order)
+    best_cost = float('inf')
+    best_path = []
+    rv = []
+    for element in running_order:
+        running_distance = 0
+        for i in range(len(element) - 1):
+            if running_distance < best_cost:
+                id_0 = element[i]
+                id_1 = element[i + 1]
+                if id_0 == 'starting_location':
+                    lon_0 = user_query.start_lng
+                    lat_0 = user_query.start_lat
+                else:    
+                    lon_0 = places_dict[id_0][0].lng
+                    lat_0 = places_dict[id_0][0].lat
+                lon_1 = places_dict[id_1][0].lng
+                lat_1 = places_dict[id_1][0].lat
+                distance = distance_matrix[id_0][id_1]
+                running_distance += distance
+                if i == len(element) - 2:
+                    if running_distance < best_cost:
+                        best_cost = running_distance
+                        best_path = element
+
+
+    return best_path
