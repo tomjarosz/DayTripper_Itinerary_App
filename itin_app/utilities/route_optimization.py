@@ -392,7 +392,7 @@ def optimize(user_query, places_dict,verbose=False,quick_sort=False):
     print('\n'*2)
 
     #this is a little rough atm
-    if not quick_sort and len(path_from_run) < 7: 
+    if not quick_sort and len(path_from_run) < 15: 
         slow_sorted =slow_sort(places_dict, path_from_run)
         return slow_sorted, exceptions, time
     else:
@@ -574,16 +574,28 @@ def slow_sort(places_dict, running_order):
                     distance_matrix[item_a][item_b] = distance
                 else:
                     distance_matrix[item_a] = {item_b:distance}
+    pairs = []
+    for primary_key in distance_matrix.keys():
+        for secondary_key, value in distance_matrix[primary_key].items():
+            pairs.append((primary_key, secondary_key, value))
 
+    #heuristic for trimming down set
+    num_to_discount = int((order_len ** 2) * .2)
+    print('num to discount', num_to_discount)
+    sorted_pairs = sorted(pairs, key=lambda x: x[2])
+    do_not_compute = sorted_pairs[:num_to_discount]
+    do_not_compute = set([(do_not_compute[i][0], do_not_compute[i][1]) for i in range(len(do_not_compute))])
+    print('do not compute:', do_not_compute)
     running_order = permutations(running_order)
     best_cost = float('inf')
     best_path = []
     rv = []
+    
     count = 0
     for element in running_order:
         running_distance = 0
         for i in range(order_len):
-            if running_distance < best_cost:
+            if running_distance < best_cost and (element[i], element[i+1]) not in do_not_compute:
                 id_0 = element[i]
                 id_1 = element[i + 1]  
                 lon_0 = places_dict[id_0][0].lng
