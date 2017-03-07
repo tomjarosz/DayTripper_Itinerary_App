@@ -126,9 +126,9 @@ def long_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transi
     Return: list of strings, integer, int/None, dict
     '''
     if verbose: print('triggered variant min cost')
-
+    itinerary = []
     time = user_query.time_start.hour * 60 + user_query.time_start.minute
-    exceptions = []   
+    exceptions = {}   
     all_open = True
     priority_score = 0
     for i in range(len(path) - 1):
@@ -136,7 +136,7 @@ def long_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transi
         round_exceptions = []
         begin = path[i]
         end = path[i + 1]
-        time_string = format_time_string(time)
+        time_string = begin_time = format_time_string(time)
         if begin == 'starting_location':
             pass
         elif places_dict[begin][0].is_open_dow_time(user_query.arrival_date.weekday() + 1, time_string):
@@ -157,6 +157,7 @@ def long_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transi
             priority_score += .5 * places_dict[begin][1]
         else:
             all_open = False
+        time_string = end_time = format_time_string(time)
         mode_of_transportation = user_query.mode_transportation
         transit_seconds, past_transit_times = retrieve_transit_time(begin, end,
                                                                     seconds_from_epoch,
@@ -164,18 +165,19 @@ def long_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transi
                                                                     places_dict,
                                                                     mode_of_transportation)
 
+        itinerary.append((begin, begin_time, end_time))
         #see if more efficient modes of transit exist
         if transit_seconds > 1200 and mode_of_transportation != 'driving':
             round_exceptions = find_exceptions(begin, end, places_dict,
                                                transit_seconds, seconds_from_epoch,
                                                mode_of_transportation)
             if round_exceptions:
-                exceptions.append(round_exceptions)
+                exceptions[round_exceptions[0]] = round_exceptions[1:]
         if verbose: print('transit minutes were',transit_seconds / 60)
         time += transit_seconds / 60
 
 
-    return path, time, past_transit_times, exceptions, priority_score, all_open
+    return itinerary, time, past_transit_times, exceptions, priority_score, all_open
  
 
 def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_of_transportation, verbose=False):
@@ -230,7 +232,8 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_o
                 
     if new_time < REDUCTION_THRESHOLD * transit_seconds:
         if verbose: print('\n:::issued a transit exception:::\n')
-        return (begin, end, new_type, (transit_seconds -  new_time) / 60)
+        time_saved = int((transit_seconds -  new_time) / 60)
+        return (begin, end, new_type, time_saved)
     else:
         return None
 
@@ -243,7 +246,7 @@ def format_time_string(time):
     Returns: string
     '''
     hours = str(int(time / 60))
-    minutes = str(time % 60)
+    minutes = str(int(time % 60))
     if len(hours) == 1:
         hours = '0' + hours
     if len(minutes) == 1:
@@ -426,14 +429,14 @@ def optimize(user_query, places_dict,verbose=True):
             if verbose: print('and a time of',time)
             if all_open:
                 if verbose: print('All locations were open.\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path, exceptions, time))
-                return path, exceptions, time
-            elif priority_score >= best_path_priority and time < best_time:
+                return path, exceptions
+            elif (priority_score >= best_path_priority and time < best_time) or path == None:
                 best_path = path
                 best_path_exceptions = exceptions
                 best_time = time
                 best_path_priority = priority_score
     if verbose: print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(best_path, best_path_exceptions, best_time))
-    return best_path, best_path_exceptions, best_time
+    return best_path, best_path_exceptions
    
 
 
@@ -618,11 +621,14 @@ def slow_sort(places_dict, running_order, verbose=True):
             pairs.append((primary_key, secondary_key, value))
 
     #heuristic for trimming down set
-    num_to_discount = int((order_len ** 2) * .2)
+    DISCOUNT_FACTOR = .2
+    num_to_discount = int((order_len ** 2) * DISCOUNT_FACTOR)
     sorted_pairs = sorted(pairs, key=lambda x: x[2])
-    do_not_compute = sorted_pairs[:num_to_discount]
-    do_not_compute = set([(do_not_compute[i][0], do_not_compute[i][1]) for i in range(len(do_not_compute))])
+    #do_not_compute = sorted_pairs[:num_to_discount]
+    #do_not_compute = set([(do_not_compute[i][0], do_not_compute[i][1]) for i in range(len(do_not_compute))])
+    do_not_compute = set()
     running_order = permutations(running_order)
+
     best_cost = float('inf')
     best_path = []
     rv = []
@@ -632,6 +638,7 @@ def slow_sort(places_dict, running_order, verbose=True):
         running_distance = 0
         for i in range(order_len):
             if running_distance < best_cost and (element[i], element[i+1]) not in do_not_compute:
+                count += 1
                 id_0 = element[i]
                 id_1 = element[i + 1]  
                 lon_0 = places_dict[id_0][0].lng
@@ -641,11 +648,13 @@ def slow_sort(places_dict, running_order, verbose=True):
                 distance = distance_matrix[id_0][id_1]
                 running_distance += distance
                 if i == order_len - 1:
-                    count += 1
                     running_queue.put((distance,element))
                     if running_distance < best_cost:
                         best_cost = running_distance
                         best_path = element
-    if verbose: print('calculated {} % of full paths'.format(round((count / len(running_order)) * 100), 6))
+            else:
+                break
+    total_segments = math.factorial(len(element)) * (len(element) - 1)
+    if verbose: print('processed {} % of all segments'.format(round((count / total_segments) * 100), 4))
 
     return best_path, running_queue
