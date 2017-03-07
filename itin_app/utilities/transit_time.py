@@ -35,9 +35,11 @@ def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, depa
 
     #print_dict(json_data)
     
-    time = json_data['routes'][0]['legs'][0]['duration']['value']
+    if json_data['routes']:
+        time = json_data['routes'][0]['legs'][0]['duration']['value']
+        return time
 
-    return time
+    return None
 
 def print_dict(adict, sep=" "):
     if type(adict) == list:
