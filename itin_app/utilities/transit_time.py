@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import requests
 
+#Carlos' Key
 KEY = 'AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8'
 
 def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, departure_time=None, mode='driving'):
@@ -38,8 +39,8 @@ def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, depa
     if json_data['routes']:
         time = json_data['routes'][0]['legs'][0]['duration']['value']
         return time
-    print('here')
-    return 999
+
+    return -1
 
 def print_dict(adict, sep=" "):
     if type(adict) == list:
