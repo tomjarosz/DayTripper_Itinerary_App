@@ -13,19 +13,25 @@ Here is your itinerary!
     <th>Recommended Order to Visit</th>
     <th>Place name</th>
     <th>Address</th>
-    <th>Recommended Duration Here</th>
+    <th>Recommended Arrival Time</th>
+    <th>Recommended Departure Time</th>
+    <th>Alternate Mode of Transportation</th>
+
   </tr>
     {% for place in final_places_list %}
     <tr>
-    <td><img src="{{ place.0 }}" style="width:120px;height:120px;">
+    <td><img src="{{ place.url }}" style="width:120px;height:120px;">
     </td>
     <td style = "text-align: center;">
-      {{ place.6 }}
+      {{ forloop.counter }}
     </td>
-    <td>{{ place.1 }}</td>
-    <td>{{ place.5 }}</td>
+    <td>{{ place.name }}</td>
+    <td>{{ place.address }}</td>
     <td style = "text-align: center;">
-       "" 
+       {{ place.begin_time }} </td>
+    <td style = "text-align: center;">
+       {{ place.end_time }} </td>
+    <td>{{ place.exception }}</td>
     </td>
     </tr>      
     {% endfor %}
@@ -61,15 +67,15 @@ Here is your itinerary!
         var bounds = new google.maps.LatLngBounds();
 
         {% for place in final_places_list %} 
-        var point = new google.maps.LatLng({{place.2}},{{place.3}});
+        var point = new google.maps.LatLng({{place.lat}},{{place.lng}});
         bounds.extend(point);
         var marker = new google.maps.Marker({
             position: point,
             map: map,
-            icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld='+ {{place.6}} +'|FF776B|000000'
+            icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld='+ {{ forloop.counter }} +'|FF776B|000000'
         });
             marker['infowindow']  = new google.maps.InfoWindow({
-                content: "<h1>{{place.1}}</h1> <br> {{ place.5 }} <br> {{ place.7 }} <br> {{ place.8 }}",
+                content: "<h1>{{place.name}}</h1> <br> {{ place.address }} <br> {{ place.city }} <br> {{ place.postal_code }}",
         });
             google.maps.event.addListener(marker, 'click', function() {
                  this['infowindow'].open(map, this);
