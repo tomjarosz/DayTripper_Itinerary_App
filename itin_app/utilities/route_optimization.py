@@ -232,6 +232,8 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_o
                 
     if new_time < REDUCTION_THRESHOLD * transit_seconds:
         if verbose: print('\n:::issued a transit exception:::\n')
+        if new_type == 'transit':
+            new_type = 'taking public transportation'
         time_saved = int((transit_seconds -  new_time) / 60)
         return (begin, end, new_type, time_saved)
     else:
