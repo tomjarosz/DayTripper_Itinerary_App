@@ -84,11 +84,12 @@ def index(request):
             place_aux.begin_time = begin_time
             place_aux.end_time = end_time
             if id_place in transit_exceptions:
-                place_aux.exception = transit_exceptions[id_place][1]
+                place_aux.exception = 'You could save {tt} minutes {mode} to the next POI'.format(tt=transit_exceptions[id_place][2], mode=transit_exceptions[id_place][1])
             final_places_list.append(place_aux)
 
 
         context['final_places_list'] = final_places_list
         context['transit_exceptions'] = transit_exceptions
+        context['query'] = user_query
 
         return render(request, 'itinerary/final_results.html', context)
