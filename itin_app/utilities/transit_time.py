@@ -2,7 +2,10 @@ from datetime import datetime
 import json
 import requests
 
-KEY = 'AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8'
+#Carlos' key:
+# KEY = 'AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8'
+#Tom's key:
+KEY = 'AIzaSyCHnWsgfYovOIhzLoLaeNCyM85MGEg5ZRQ'
 
 def helper_transit_time(place_a_lat, place_a_lng, place_b_lat, place_b_lng, departure_time=None, mode='driving'):
     '''

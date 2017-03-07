@@ -5,7 +5,12 @@
 </font>
 <br>
 <br>
-Here is your custom itinerary for {{ query.city }} on {{ query.date }}, from {{ query.start }} to {{ query.end }} based on your mode of transportation-- {{ query.mode_transportation }}.
+
+Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, from {{ query.time_start }} to {{ query.time_end }} based on your mode of transportation-- {{ query.mode_transportation }}.
+<br>
+<br>
+If you follow the rough itinerary below, you'll make the most out of your time at the locations you want to visit and minimize your transit time. We've made sure to prioritizee the places you want to visit most. It is seems that your suggested route is longer than it could be, it's because of a conflict with the operating hours of one or more places in the itinerary. 
+<br>
 
 
 <br>
@@ -96,3 +101,7 @@ Here is your custom itinerary for {{ query.city }} on {{ query.date }}, from {{ 
     </script>
   </body>
 </html>
+
+<hr>
+<p>DayTripper is powered by the FourSquare and GoogleMaps APIs.</p>
+</font>
