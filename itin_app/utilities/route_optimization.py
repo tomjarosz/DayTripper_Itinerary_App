@@ -316,7 +316,7 @@ def retrieve_transit_time(begin_id, end_id, seconds_from_epoch,
     return rv, past_transit_times
 
 
-def optimize(user_query, places_dict,verbose=True,quick_sort=False):
+def optimize(user_query, places_dict,verbose=True):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -413,29 +413,28 @@ def optimize(user_query, places_dict,verbose=True,quick_sort=False):
     
     print('\n'*2)
     PATHS_TO_TRY = 10
-    if not quick_sort and len(path_from_run) < 15: 
-        if verbose: print('trying comprehensive sort')
-        slow_sorted, running_queue = slow_sort(places_dict, path_from_run)
-        best_path, best_path_exceptions, best_time, best_path_priority = None, None, float('inf'), -1
-        for i in range(PATHS_TO_TRY):
-            if not running_queue.empty():
-                if verbose: print('now trying the {} best run'.format(i))
-                distance, path = running_queue.get()
-                path, time, past_transit_times, exceptions, priority_score, all_open = long_min_cost(path,user_query,places_dict,seconds_from_epoch,past_transit_times)
-                if verbose: print('this iteration had priority score {}, out of a maximum of {}'.format(priority_score, max_priority_score))
-                if all_open:
-                    if verbose: print('All locations were open.\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path, exceptions, time))
-                    return path, exceptions, time
-                elif priority_score >= best_path_priority and time > best_time:
-                    best_path = path
-                    best_path_exceptions = exceptions
-                    best_time = time
-                    best_path_priority = priority_score
-        if verbose: print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(best_path, best_path_exceptions, best_time))
-        return best_path, best_path_exceptions, best_time
-    else:
-        if verbose: print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path_from_run, exceptions, time))
-        return path_from_run, exceptions, time
+
+    if verbose: print('trying comprehensive sort')
+    slow_sorted, running_queue = slow_sort(places_dict, path_from_run)
+    best_path, best_path_exceptions, best_time, best_path_priority = None, None, float('inf'), -1
+    for i in range(PATHS_TO_TRY):
+        if not running_queue.empty():
+            if verbose: print('now trying the {} best run'.format(i))
+            distance, path = running_queue.get()
+            path, time, past_transit_times, exceptions, priority_score, all_open = long_min_cost(path,user_query,places_dict,seconds_from_epoch,past_transit_times)
+            if verbose: print('this iteration had priority score {}, out of a maximum of {}'.format(priority_score, max_priority_score))
+            if verbose: print('and a time of',time)
+            if all_open:
+                if verbose: print('All locations were open.\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(path, exceptions, time))
+                return path, exceptions, time
+            elif priority_score >= best_path_priority and time < best_time:
+                best_path = path
+                best_path_exceptions = exceptions
+                best_time = time
+                best_path_priority = priority_score
+    if verbose: print('\npassed on: \npath from run: {}\nexceptions: {}\n time: {}\n'.format(best_path, best_path_exceptions, best_time))
+    return best_path, best_path_exceptions, best_time
+   
 
 
 def branch_bound(user_query, places_dict, places_to_include):
