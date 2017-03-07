@@ -77,30 +77,38 @@ def index(request):
                 places_preferences[id_place] = [Place.objects.get(id_str=id_place), second_form_data[key]]
 
         optimal_places_order, transit_exceptions, times  = optimize(user_query, places_preferences)
-        print(optimal_places_order)
-        final_places_list = [Place.objects.get(id_str=id_place) for id_place in optimal_places_order]
+
+        final_places_list = []
+        for id_place in optimal_places_order:
+            place_aux = Place.objects.get(id_str=id_place)
+            place_aux.begin_time = 2
+            place_aux.end_time = 3
+            place_aux.exception = 4
+            final_places_list.append(place_aux)
+
+        #final_places_list = [Place.objects.get(id_str=id_place) for id_place in optimal_places_order]
+
 
         context['final_places_list'] = final_places_list
         context['transit_exceptions'] = transit_exceptions
-        context['times'] = times
 
-        output_return = []
-        counter = 1
+        #output_return = []
+        # counter = 1
 
-        for place in context['final_places_list']:
-            location_list = []
-            location_list.append(place.url)
-            location_list.append(place.name)
-            location_list.append(place.lat)
-            location_list.append(place.lng)
-            location_list.append(place.id_str)
-            location_list.append(place.address)
-            location_list.append(counter)
-            location_list.append(place.city)
-            location_list.append(place.postal_code)
-            output_return.append(location_list)
-            counter+= 1
+        # for place in context['final_places_list']:
+        #     location_list = []
+        #     location_list.append(place.url)
+        #     location_list.append(place.name)
+        #     location_list.append(place.lat)
+        #     location_list.append(place.lng)
+        #     location_list.append(place.id_str)
+        #     location_list.append(place.address)
+        #     location_list.append(counter)
+        #     location_list.append(place.city)
+        #     location_list.append(place.postal_code)
+        #     output_return.append(location_list)
+        #     counter+= 1
 
-        context['final_places_list'] = output_return
+        #context['final_places_list'] = output_return
         # print(output_return)
         return render(request, 'itinerary/final_results.html', context)
