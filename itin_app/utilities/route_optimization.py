@@ -164,15 +164,23 @@ def long_min_cost(path, user_query, places_dict, seconds_from_epoch, past_transi
                                                                     time, past_transit_times,
                                                                     places_dict,
                                                                     mode_of_transportation)
-
         itinerary.append((begin, begin_time, end_time))
+        if transit_seconds == -1:
+            transit_seconds, past_transit_times = retrieve_transit_time(begin, end,
+                                                                    seconds_from_epoch,
+                                                                    time, past_transit_times,
+                                                                    places_dict,
+                                                                    'driving')
+            message = 'Unable to find directions for {}, so times given are for driving.'.format(mode_of_transportation)
+            exceptions[begin] = message
+        else:
         #see if more efficient modes of transit exist
-        if transit_seconds > 1200 and mode_of_transportation != 'driving':
-            round_exceptions = find_exceptions(begin, end, places_dict,
-                                               transit_seconds, seconds_from_epoch,
-                                               mode_of_transportation)
-            if round_exceptions:
-                exceptions[round_exceptions[0]] = round_exceptions[1:]
+            if transit_seconds > 1200 and mode_of_transportation != 'driving':
+                round_exceptions = find_exceptions(begin, end, places_dict,
+                                                   transit_seconds, seconds_from_epoch,
+                                                   mode_of_transportation)
+                if round_exceptions:
+                    exceptions[round_exceptions[0]] = round_exceptions[1]
         if verbose: print('transit minutes were',transit_seconds / 60)
         time += transit_seconds / 60
 
@@ -213,7 +221,7 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_o
                                              'transit')
     else:
         new_time = transit_seconds
-    if new_time > REDUCTION_THRESHOLD * transit_seconds:
+    if new_time > REDUCTION_THRESHOLD * transit_seconds or new_time == -1:
         new_type = 'driving'
         if begin == 'starting_location':
             new_time = helper_transit_time(places_dict[begin]['lat'],
@@ -235,7 +243,8 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_o
         if new_type == 'transit':
             new_type = 'taking public transportation'
         time_saved = int((transit_seconds -  new_time) / 60)
-        return (begin, end, new_type, time_saved)
+        message = 'You could save {} minutes by {}'.format(time_saved, new_type)
+        return [begin, message]
     else:
         return None
 
