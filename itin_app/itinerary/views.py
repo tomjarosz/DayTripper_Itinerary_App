@@ -83,7 +83,8 @@ def index(request):
             place_aux = Place.objects.get(id_str=id_place)
             place_aux.begin_time = begin_time
             place_aux.end_time = end_time
-            place_aux.exception = transit_exceptions[id_place][1]
+            if id_place in transit_exceptions:
+                place_aux.exception = transit_exceptions[id_place][1]
             final_places_list.append(place_aux)
 
 
