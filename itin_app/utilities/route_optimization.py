@@ -358,8 +358,9 @@ def optimize(user_query, places_dict,verbose=True):
     time_end = user_query.time_end.hour * 60 + user_query.time_end.minute
     time_begin = user_query.time_start.hour * 60 + user_query.time_start.minute
     time_window = time_end - time_begin
-    if verbose: print('mode of transportation',user_query.mode_transportation)
     num_included_places = time_window // TRANSIT_CONSTANT[user_query.mode_transportation]
+    if num_included_places == 0:
+        return [], []
     priority_place_labels.insert(0,'starting_location')
     if verbose: print('started with {} places'.format(num_included_places))
     past_transit_times = {}
@@ -388,12 +389,8 @@ def optimize(user_query, places_dict,verbose=True):
         cycle += 1
         if verbose: print('cycle',cycle)
         places_to_include = priority_place_labels[:num_included_places]
-        #temp
-        #return places_to_include, [], []
         path, running_distance = branch_bound(user_query, places_dict, places_to_include)
-        #if verbose: print('path from branch bound',path)
 
-        #still need to figure out how to reconcile path_from_run with places_to_include
         time, past_transit_times = quick_min_cost(path,
                                                 user_query,
                                                 places_dict,
@@ -403,17 +400,19 @@ def optimize(user_query, places_dict,verbose=True):
         if verbose: print('path from get min cost is:',path)
         if time > time_end:
             num_included_places -= 1
-            prev_above_time = False
+            prev_above_time = True
             if verbose: print('too long :removed one place')
         elif time < time_end:
             if verbose: print('too short: added one place')
             num_included_places += 1
             #finish if switched from over time to under time in last iteration
-            if prev_above_time:
+            if prev_above_time and cycle > 5:
                 if verbose: print('previously above time. set optomized to true!')
                 optimized = True
+            elif prev_above_time:
+                prev_above_time = False
         #finish if close enough to ending time
-        if time >= (time_end - 60) and time <= (time_end + 60):
+        if time >= (time_end - 15) and time <= (time_end + 90):
             if verbose: print('time was within allowance. set optimized to true')
             optimized = True
         #finish if corner case
