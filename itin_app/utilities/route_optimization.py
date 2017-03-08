@@ -243,7 +243,7 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_time, mode_o
         if new_type == 'transit':
             new_type = 'taking public transportation'
         time_saved = int((transit_seconds -  new_time) / 60)
-        message = 'You could save {} minutes by {}'.format(time_saved, new_type)
+        message = 'You could save {} minutes by {} instead.'.format(time_saved, new_type)
         return [begin, message]
     else:
         return None
@@ -635,10 +635,15 @@ def slow_sort(places_dict, running_order, verbose=True):
     DISCOUNT_FACTOR = .2
     num_to_discount = int((order_len ** 2) * DISCOUNT_FACTOR)
     sorted_pairs = sorted(pairs, key=lambda x: x[2])
-    #do_not_compute = sorted_pairs[:num_to_discount]
-    #do_not_compute = set([(do_not_compute[i][0], do_not_compute[i][1]) for i in range(len(do_not_compute))])
+    do_not_compute = sorted_pairs[:-num_to_discount]
+    do_not_compute = set([(do_not_compute[i][0], do_not_compute[i][1]) for i in range(len(do_not_compute))])
     do_not_compute = set()
+    for i in range(num_to_discount):
+        id_0 = sorted_pairs[-(i + 1)][0]
+        id_1 = sorted_pairs[-(i+ 1)][1]
+        do_not_compute.add((id_0, id_1))
     running_order = permutations(running_order)
+
 
     best_cost = float('inf')
     best_path = []
