@@ -1,3 +1,42 @@
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Welcome to DayTripper</title>
+    <style>
+      div.container {
+        width:100%;
+      }
+      html, body {
+        height: 99%;
+        margin: 2;
+        padding: 2;
+      }
+      header{
+        padding:1em;
+        color:white;
+        background-color:008ae6;
+        clear:left;
+        text-align:left;
+      }
+      footer{
+        padding:1em;
+        color:white;
+        background-color:008ae6;
+        clear:left;
+        text-align:left;
+        font-size:14px;
+      }
+    </style>
+
+<header>
+<font face="Tahoma, Geneva, sans-serif" </font>
+<font size=7 <h1>DayTripper</h1> 
+</font><br> <font size = 4
+<h2><i>Build your custom itinerary for the day</i></h2>
+</font>
+</header>
+
 <head>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -52,49 +91,43 @@
   } );
   </script>
 </head> 
-<title>Welcome to DayTripper</title>
 
-<font face="Tahoma, Geneva, sans-serif", size=7
-<h1><a href="http://127.0.0.1:8000/itinerary">DayTripper</a></h1>
-</font>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
 <form action="{% url 'itinerary:index' %}" method="post">
     {% csrf_token %}
     <font face="Tahoma, Geneva, sans-serif"
-    <p><b>
+    <p>
     <br>
-    Let's start off by getting some information about what your schedule and 
-    <br>transportation looks like as well as the types of places you want to visit.
+    Let's start off by getting some information about what your schedule and transportation looks like as well as the types of places you want to visit.
     <br> 
     <br>
     Simply fill out the fields below... 
     <br>
     <br>
-    </b>
+  
     </p>
-
-    <p>
+    <p><b><font color="#009999">
     City to visit*:
-    <input id="tags" name="query_city" value="{{ user_query.query_city }}">
+    </b></font><input id="tags" name="query_city" value="{{ user_query.query_city }}">
     </p>
-    <p>
+    <p><b><font color="#009999">
     Day of visit:
-    <input type="text" id="datepicker" name="arrival_date" value="{{ user_query.arrival_date|date:'m/d/Y' }}">
+    </b></font><input type="text" id="datepicker" name="arrival_date" value="{{ user_query.arrival_date|date:'m/d/Y' }}">
     </p>
-    <p>
+    <p><b><font color="#009999">
     Start-end time:
-    <input type="text" id="amount-time" name="time_frame" readonly style="border:0; color:#000000;">
+    </b></font><input type="text" id="amount-time" name="time_frame" readonly style="border:0; color:#000000;">
     <div id="slider-range"></div>
     </p>
-    <p>
+    <p><b><font color="#009999">
     Search by categories:
-    <br>
+    </b></font><br>
     {% for category in categories %}
     <input type="checkbox" name="cat{{ category.user_cat_id }}" value="{{ category.user_cat_id }}" /> {{ category.user_category }} <br>
     {% endfor %}
     </p>
-    <p>
+    <p><b><font color="#009999">
     Select mode of transportation:
     <select name="mode_transportation">
         <option value="any"></option>
@@ -104,20 +137,20 @@
         <option value="transit">Public Trans.</option>
     </select>
     </p>
-    <p>
+    <p><b><font color="#009999">
     Starting location (address):
-    <input type="text" name="start_location" value="{{ user_query.starting_location }}">
+    </b></font><input type="text" name="start_location" value="{{ user_query.starting_location }}">
     </p>
 
- <br>
     
 <input type="submit" value="Send" />
 <input type="reset">
 </form>
- 
+<br>
+<br>
 
-{% block title %}
-    <hr>
-    <p>Thanks for visiting my site.</p>
-{% endblock %}
+<footer>
+  <font
+    <p>Thanks for visiting DayTripper!</p>
 </font>
+</html

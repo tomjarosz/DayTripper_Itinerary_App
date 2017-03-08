@@ -1,27 +1,60 @@
-<font face="Tahoma, Geneva, sans-serif"
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>DayTripper: Rank Locations</title>
+    <style>
+      div.container {
+        width:100%;
+      }
+      html, body {
+        height: 99%;
+        margin: 2;
+        padding: 2;
+      }
+      header{
+        padding:1em;
+        color:white;
+        background-color:008ae6;
+        clear:left;
+        text-align:left;
+      }
+      footer{
+        padding:1em;
+        color:white;
+        background-color:008ae6;
+        clear:left;
+        text-align:left;
+        font-size:14px;
+      }
+    </style>
+  </head>
+
+<header>
+<font face="Tahoma, Geneva, sans-serif" </font>
+<font size=7 <h1>DayTripper</h1> 
+</font><br> <font size = 4
+<h2><i>Build your custom itinerary for the day</i></h2>
 </font>
-<font size=7
-<h1><a href="http://127.0.0.1:8000/itinerary">DayTripper</a></h1>
+</header>
+<br>
+<font size=3
 </font>
+Here are the best places we picked out based on your preferences!
 <br>
-<br>
-Here are the best places we picked for you!
-<br>Use to drop-down menu on the right of each 
-location to tell us what you think.
-<br>Then we'll pick some or all of the locations to build
-your itinerary.
+<br>Use the drop-down menu for each location to tell us what you think about them. Then based on operating hours, locations, and your mode of transporation, we'll build your itinerary with some or all of these locations.
 <br>
 <br>
     <form action="{% url 'itinerary:index' %}" method="get">
     {% csrf_token %}
     <input type='hidden' name='query_id_from_form' value='{{ query_id }}' />
-        <table style="width:90%">
+        <table style="width:100%">
           <tr>
-            <th>Photo</th>
-            <th>Place name</th>
-            <th>Checkins</th> 
-            <th>User Preference</th>
-            <th>Description</th>
+            <th><font color="#009999">Photo</font></th>
+            <th><font color="#009999">Place Name</font></th>
+            <th><font color="#009999">Checkins</font></th> 
+            <th><font color="#009999">User Preference</font></th>
+            <th><font color="#009999">Description</font></th>
 
           </tr>
           
@@ -29,7 +62,8 @@ your itinerary.
             <tr>
             <td><img src="{{ place.url }}" style="width:120px;height:120px;">
             </td>
-            <td>{{ place.name }}</td>
+            <td WIDTH = '20%'>
+                {{ place.name }}</td>
             <td>{{ place.checkins }}</td> 
             <td>                 
                 <select name="ur_{{ place.id_str }}">
@@ -39,13 +73,16 @@ your itinerary.
                 </select>
                 </td>
             <td WIDTH = '60%'>
-                {{ place.description|truncatechars:115 }}</td>
+                {{ place.description|truncatechars:130 }}</td>
             </tr>      
             {% endfor %}
         </table>
     <input type="submit" value="Submit" />
     </form>
 
-    <hr>
-    <p>This is the query id: {{ query_id }}</p>
+    <footer>
+    <font
+    <p>DayTripper is supported by the FourSquare and GoogleMaps APIs.<br>
+        *This is the query id: {{ query_id }}</p>
 </font>
+</html

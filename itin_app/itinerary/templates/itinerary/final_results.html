@@ -1,29 +1,64 @@
-<font face="Tahoma, Geneva, sans-serif"
-</font>
-<font size=7
-<h1><a href="http://127.0.0.1:8000/itinerary">DayTripper</a></h1>
-</font>
-<br>
-<br>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>DayTripper Itinerary</title>
+    <style>
+      #map {
+        height: 100%;
+        margin: 2;
+        padding: 2;
+      }
+      div.container {
+        width:100%;
+      }
+      html, body {
+        height: 99%;
+        margin: 2;
+        padding: 2;
+      }
+      header{
+        padding:1em;
+        color:white;
+        background-color:008ae6;
+        clear:left;
+        text-align:left;
+      }
+      footer{
+        padding:1em;
+        color:white;
+        background-color:008ae6;
+        clear:left;
+        text-align:left;
+        font-size:14px;
+      }
+    </style>
 
+<header>
+<font face="Tahoma, Geneva, sans-serif" </font>
+<font size=7 <h1>DayTripper</h1> 
+</font><br> <font size = 4
+<h2><i>Build your custom itinerary for the day</i></h2>
+</font>
+</header>
+<br>
+<font size=3
+</font>
 Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, from {{ query.time_start }} to {{ query.time_end }} based on your mode of transportation-- {{ query.mode_transportation }}.
 <br>
 <br>
-If you follow the rough itinerary below, you'll make the most out of your time at the locations you want to visit and minimize your transit time. We've made sure to prioritize the places you want to visit most. If is seems that your suggested route is longer than it could be, it's because of a conflict with the operating hours of one or more places in the itinerary. 
+**If you follow the rough itinerary below, you'll make the most out of your time at the locations you want to visit and minimize your transit time. We've made sure to prioritize the places you want to visit most. If is seems that your suggested route is longer than it could be, it's because of a conflict with the operating hours of one or more places in the itinerary. 
 <br>
-
-
 <br>
-<table style="width:60%">
+<table style="width:100%">
   <tr>
     <th> </th>
-    <th>Recommended Order to Visit</th>
-    <th>Place name</th>
-    <th>Address</th>
-    <th>Recommended Arrival Time</th>
-    <th>Recommended Departure Time</th>
-    <th>Notes</th>
-
+    <th><font color="#009999">Order to Visit</font></th>
+    <th><font color="#009999">Place Name</font></th>
+    <th><font color="#009999">Address</font></th>
+    <th><font color="#009999">Arrival<br>Time</font></th>
+    <th><font color="#009999">Departure Time</font></th>
+    <th><font color="#009999">Notes</font></th>
   </tr>
     {% for place in final_places_list %}
     <tr>
@@ -38,29 +73,11 @@ If you follow the rough itinerary below, you'll make the most out of your time a
        {{ place.begin_time }} </td>
     <td style = "text-align: center;">
        {{ place.end_time }} </td>
-    <td>{{ place.exception }}</td>
-    </td>
+    <td WIDTH = 30%>
+       {{ place.exception }}</td>
     </tr>      
     {% endfor %}
 </table>
-
-<html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>DayTripper Itinerary</title>
-    <style>
-
-      #map {
-        height: 100%;
-      }
-      html, body {
-        height: 90%;
-        margin: 10;
-        padding: 10;
-      }
-    </style>
-  </head>
   <body>
     <div id="map"></div>
     <script>
@@ -68,7 +85,6 @@ If you follow the rough itinerary below, you'll make the most out of your time a
       function initMap() {
         var map = new google.maps.Map(document.getElementById('map'), {
           zoom: 10,
-          // center: {lat: 39.50, lng: -98.35}
         });
 
         var bounds = new google.maps.LatLngBounds();
@@ -102,6 +118,8 @@ If you follow the rough itinerary below, you'll make the most out of your time a
   </body>
 </html>
 
-<hr>
-<p>DayTripper is powered by the FourSquare and GoogleMaps APIs.</p>
+  <footer>
+  <font
+    <p>DayTripper is supported by the FourSquare and GoogleMaps APIs.
 </font>
+</html
