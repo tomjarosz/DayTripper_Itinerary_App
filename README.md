@@ -1,10 +1,11 @@
-##DayTripper
+# DayTripper
 
 DayTipper is a software product that builds a custom one-day itinerary of popular sites/attractions in a city. It yields a route-optimized list of attractions based on the user’s schedule, preferences and mode of transportation as well as attractions’ locations throughout the city.
 
 DayTripper is a Django app and utilizes a SQLite database. 
 
-Process Flow Overview:
+# General Process Flow Overview:
+
 1. User inputs preferences (city and categories of interest, time constraints, etc.). The system collects the relevant places and attributes given the city and categories chosen (either from (a) the database or (b) from FourSquare if they have not been queried before). Multiprocessing is used to expedite the query process from the APIs.
 
 2. The user is presented with the top ten locations (based on popularity) that meet his/her search criteria and asked to rank them- 'Like it', 'Indifferent', 'Don't like it'.
@@ -13,18 +14,7 @@ Process Flow Overview:
 
 4. The ordered list of locations is returned to the user with selected attributes and map. 
 
-Collect user input (city, categories, time constraints, etc.)
-Check if we have city, else, get it from Geopy
-Check if we have places for given city/category, else, query FourSquare 
-Get list of places for a given category (for each city, about 100~300 places)
-(Multi)process those places
-Get place information and store in DB
-Get photo and description for top 10 places
-Display top 10 results to user
-
-
-
-##API's and Dependencies
+# API's and Dependencies
 Foursquare API (API key needed)
 GoogleMaps API (API key needed)
 Geopy API
@@ -32,240 +22,10 @@ Django
 Python Libraries: Datetime, Pandas, Queue, Math, Random, JSON, Requests, Base64, Functools, Multiprocessing 
 Front-end: CSS, HTML, jQuery, Javascript
 
+# Contributors
 
+Logan Noel
+Carlos Alvarado
+Tom Jarosz
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+DayTripper was developed as a project for University of Chicao CS122 class (Winter 2017).
