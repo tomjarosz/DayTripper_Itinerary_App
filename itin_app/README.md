@@ -13,8 +13,7 @@ Folder/files descriptions
             final_results.html
             input_error1.html
             input_error2.html
-            input_error3.html --> user's time window too small; can't go to any location
-            
+
         /management/commands --> includes two custom commands to manage the APP
             refresh_db.py
             load_categories.py
