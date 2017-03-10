@@ -2,8 +2,16 @@
 
 DayTipper is a software product that builds a custom one-day itinerary of popular sites/attractions in a city. It yields a route-optimized list of attractions based on the user’s schedule, preferences and mode of transportation as well as attractions’ locations throughout the city.
 
+DayTripper is a Django app and utilizes a SQLite database. 
+
 Process Flow Overview:
-1. User inputs preferences (city categories of interest, time constraints, etc.). The system collects the relevant places and attributes given the city and categories chosen (either from (a) the database or (b) from FourSquare if they have not been queried before.)
+1. User inputs preferences (city and categories of interest, time constraints, etc.). The system collects the relevant places and attributes given the city and categories chosen (either from (a) the database or (b) from FourSquare if they have not been queried before). Multiprocessing is used to expedite the query process from the APIs.
+
+2. The user is presented with the top ten locations (based on popularity) that meet his/her search criteria and asked to rank them- 'Like it', 'Indifferent', 'Don't like it'.
+
+3. Based on the user's ranking, locations within the city, operating hours, time constraints, mode of transportation, and other factors, the optimization algorithm is invoked to determine the best locations to visit and appropriate order to visit.
+
+4. The ordered list of locations is returned to the user with selected attributes and map. 
 
 Collect user input (city, categories, time constraints, etc.)
 Check if we have city, else, get it from Geopy
