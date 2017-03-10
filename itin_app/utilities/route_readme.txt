@@ -1,4 +1,4 @@
-route_optimization.py README---Explains how the algorithm runs.
+route_optimization.py README
 
 Step 1: Determine which nodes (POIs) to prioritize
 We first include POIs which the user has ranked highest into the potential tour, 
