@@ -89,6 +89,15 @@ Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, 
 
         var bounds = new google.maps.LatLngBounds();
 
+        {% if query.start_lat %}
+          var point = new google.maps.LatLng({{query.start_lat}}, {{query.start_lng}})
+          var marker = new google.maps.Marker({
+            position: point,
+            map: map,
+            icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=0|008000|000000'
+          });
+        {% endif %}
+
         {% for place in final_places_list %} 
         var point = new google.maps.LatLng({{place.lat}},{{place.lng}});
         bounds.extend(point);
