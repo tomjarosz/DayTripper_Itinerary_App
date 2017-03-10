@@ -7,7 +7,7 @@ from multiprocessing import Pool
 
 import json
 import requests
-from utilities.weather import Weather
+#from utilities.weather import Weather
 
 CLIENT_ID='C1MWPLVELHVOWEQDPZ3FQX2QL31BD5FE44Y0JQBKNRUA1UOA'
 CLIENT_SECRET='0FRFY3QUW0LZGA32TMEFOSCUQYIXMUK2YU4RSDHJ1EQLA0AQ'
