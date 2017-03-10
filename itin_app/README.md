@@ -26,6 +26,9 @@ Folder/files descriptions
     
     ./utilities --> contains functions to interact with APIs and perform route optimization
     
+    ./old_or_in_process --> mostly old code for several things we tried. We didn't
+        have time to implement a "weather forecast" section on the results page.
+        This would have been useful information for the user.
 # How to use the Admin Management Tools
 1. load_categories.py
 
