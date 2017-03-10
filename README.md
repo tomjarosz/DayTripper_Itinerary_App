@@ -4,7 +4,7 @@ DayTipper is a software product that builds a custom one-day itinerary of popula
 
 DayTripper is a Django app and utilizes a SQLite database. 
 
-# General Process Flow Overview
+# General Software Overview
 
 1. User inputs preferences (city and categories of interest, time constraints, etc.). The system collects the relevant places and attributes given the city and categories chosen (either from (a) the database or (b) from FourSquare if they have not been queried before). Multiprocessing is used to expedite the query process from the APIs.
 
@@ -30,7 +30,9 @@ Front-end: CSS, HTML, jQuery, Javascript
 # Contributors
 
 Logan Noel
+
 Carlos Alvarado
+
 Tom Jarosz
 
 DayTripper was developed as a project for University of Chicago CS122 class (Winter 2017).
