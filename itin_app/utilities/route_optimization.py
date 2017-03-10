@@ -97,12 +97,12 @@ def quick_min_cost(path, query, places_dict, epoch_secs,
                 time += DEFAULT_TIME_SPENT
             time_string = format_time_string(time)
 
-        mode_of_transportation = query.mode_transportation
+        mode_of_transit = query.mode_transportation
         transit_seconds, tr_times = retrieve_transit_time(begin, end,
-                                                                    epoch_secs,
-                                                                    time, tr_times,
-                                                                    places_dict,
-                                                                    mode_of_transportation)
+                                                          epoch_secs,
+                                                          time, tr_times,
+                                                          places_dict,
+                                                          mode_of_transit)
 
         
         time += transit_seconds / 60
@@ -134,11 +134,22 @@ def long_min_cost(path, query, places_dict, epoch_secs,
     priority = 0
     dow = query.arrival_date.weekday() + 1
 
+
     for i in range(len(path) - 1):
-        if verbose: print('time at beginning of first node',time)
+        mode_of_transit = query.mode_transportation
         round_exceptions = []
         begin = path[i]
         end = path[i + 1]
+        if i == 0:
+            first_transit, tr_times = retrieve_transit_time(begin, end,
+                                                            epoch_secs,
+                                                            time, tr_times,
+                                                            places_dict,
+                                                            mode_of_transit)
+            if verbose: print('time from start to first:', first_transit / 60)
+            time += first_transit / 60
+
+        if verbose: print('time at beginning of first node',time)
         time_string = begin_time = format_time_string(time)
         if begin == 'starting_location':
             pass
@@ -161,31 +172,32 @@ def long_min_cost(path, query, places_dict, epoch_secs,
         else:
             all_open = False
         time_string = end_time = format_time_string(time)
-        mode_of_transportation = query.mode_transportation
         transit_seconds, tr_times = retrieve_transit_time(begin, end,
-                                                                    epoch_secs,
-                                                                    time, tr_times,
-                                                                    places_dict,
-                                                                    mode_of_transportation)
+                                                          epoch_secs,
+                                                          time, tr_times,
+                                                          places_dict,
+                                                          mode_of_transit)
         itinerary.append((begin, begin_time, end_time))
         #do the most thorough search
         if final_run:    
             if transit_seconds == MISSING:
                 transit_seconds, tr_times = retrieve_transit_time(begin, end,
-                                                                        epoch_secs,
-                                                                        time, tr_times,
-                                                                        places_dict,
-                                                                        'driving')
+                                                                  epoch_secs,
+                                                                  time, 
+                                                                  tr_times,
+                                                                  places_dict,
+                                                                  'driving')
                 base_string = 'Unable to find directions for {}, \
                 so times given are for driving.'
-                message = base_string.format(mode_of_transportation)
+                message = base_string.format(mode_of_transit)
                 exceptions[begin] = message
             else:
             #see if more efficient modes of transit exist
-                if transit_seconds > THRESHOLD and mode_of_transportation != 'driving':
+                if transit_seconds > THRESHOLD and mode_of_transit != 'driving':
                     round_exceptions = find_exceptions(begin, end, places_dict,
-                                                       transit_seconds, epoch_secs,
-                                                       mode_of_transportation)
+                                                       transit_seconds, 
+                                                       epoch_secs,
+                                                       mode_of_transit)
                     if round_exceptions:
                         exceptions[round_exceptions[0]] = round_exceptions[1]
             if verbose: print('transit minutes were',transit_seconds / 60)
@@ -198,7 +210,7 @@ def long_min_cost(path, query, places_dict, epoch_secs,
  
 
 def find_exceptions(begin, end, places_dict, transit_seconds, epoch_secs, 
-                    mode_of_transportation, verbose=False):
+                    mode_of_transit, verbose=False):
     '''
     Determine if there is a more efficient mode of transport to recommend 
     to the user.
@@ -208,13 +220,13 @@ def find_exceptions(begin, end, places_dict, transit_seconds, epoch_secs,
         places_dict: dict of tuples
         transit_seconds: integer
         epoch_secs: integer
-        mode_of_transportation: string
+        mode_of_transit: string
     Returns: tuple or None
     '''
     REDUCTION_THRESHOLD = .65
     MISSING = -1
 
-    if mode_of_transportation != 'transit':
+    if mode_of_transit != 'transit':
         new_type = 'transit'
         if begin == 'starting_location':
             new_time = helper_transit_time(places_dict[begin]['lat'],
@@ -281,7 +293,7 @@ def format_time_string(time):
 
 def retrieve_transit_time(begin_id, end_id, epoch_secs, 
                           time, tr_times, places_dict, 
-                          mode_of_transportation):
+                          mode_of_transit):
     '''
     Determines if the relevant transit calculation has been performed 
     recently. If so, retrieves that. If not, queries Google Transit API.
@@ -291,7 +303,7 @@ def retrieve_transit_time(begin_id, end_id, epoch_secs,
         epoch_secs: int
         time: int
         tr_times: dict
-        mode_of_transportation: string
+        mode_of_transit: string
     Returns: int, dict
     '''
     #Hours of the day, in minutes
@@ -331,14 +343,14 @@ def retrieve_transit_time(begin_id, end_id, epoch_secs,
                                      places_dict[end_id][0].lat,
                                      places_dict[end_id][0].lng,
                                      int(epoch_time),
-                                     mode_of_transportation)
+                                     mode_of_transit)
         else:
             rv = helper_transit_time(places_dict[begin_id][0].lat,
                                      places_dict[begin_id][0].lng,
                                      places_dict[end_id][0].lat,
                                      places_dict[end_id][0].lng,
                                      int(epoch_time),
-                                     mode_of_transportation)
+                                     mode_of_transit)
         tr_times[begin_id][end_id][section] = rv
     
     return rv, tr_times
@@ -447,11 +459,11 @@ def optimize(query, places_dict, verbose=True):
         #finish if the route can fit all places within the time limit
         if len(path) == len(places_dict.keys()) and time <= time_end:
             optimized = True
-    path_from_run = path[1:]
+    #path_from_run = path[1:] #take this out
     if verbose: print('\ntime at end was: {}'.format(time_end))
     
     #Run comprehensive route algorithm.
-    running_queue = slow_sort(places_dict, path_from_run)
+    running_queue = slow_sort(places_dict, path)
     best_path = None
     best_path_exceptions = None
     best_time = float('inf')
@@ -460,6 +472,7 @@ def optimize(query, places_dict, verbose=True):
         if not running_queue.empty():
             if verbose: print('now trying the {} best run'.format(i))
             distance, path = running_queue.get()
+            path = path[1:]
             time, tr_times, priority, all_open = long_min_cost(path,query,
                                                               places_dict,
                                                               epoch_secs,
@@ -480,10 +493,11 @@ def optimize(query, places_dict, verbose=True):
                 best_path = path
                 best_time = time
                 best_path_priority = priority
+    if verbose: print('last path to algo:',best_path)
     itin, exceptions = long_min_cost(best_path,query,places_dict,
                                      epoch_secs,tr_times,True)
     if verbose: 
-        base_message = '\npassed on: \npath from run: {}\nexceptions: {}'
+        base_message = '\npassed on: \npath: {}\nexceptions: {}'
         print(base_message.format(itin, exceptions))
     return itin, exceptions
    
@@ -659,8 +673,12 @@ def slow_sort(places_dict, running_order, verbose=True):
     for item_a in running_order:
         for item_b in running_order:
             if item_a != item_b and item_b != 'starting_location':
-                a_lng = places_dict[item_a][0].lng
-                a_lat = places_dict[item_a][0].lat
+                if item_a == 'starting_location':
+                    a_lng = places_dict['starting_location']['lng']
+                    a_lat = places_dict['starting_location']['lat']
+                else:
+                    a_lng = places_dict[item_a][0].lng
+                    a_lat = places_dict[item_a][0].lat
                 b_lng = places_dict[item_b][0].lng
                 b_lat = places_dict[item_b][0].lat
                 distance = haversine(a_lng, a_lat, b_lng, b_lat)
@@ -671,7 +689,8 @@ def slow_sort(places_dict, running_order, verbose=True):
     pairs = []
     for primary_key in distance_matrix.keys():
         for secondary_key, value in distance_matrix[primary_key].items():
-            pairs.append((primary_key, secondary_key, value))
+            if secondary_key != 'starting_location':
+                pairs.append((primary_key, secondary_key, value))
 
     #heuristic for trimming down set
     DISCOUNT_FACTOR = .1
@@ -684,7 +703,14 @@ def slow_sort(places_dict, running_order, verbose=True):
         id_1 = sorted_pairs[-(i + 1)][1]
         ignore.add((id_0, id_1))
     if verbose: print('ignore:', ignore)
-    running_order = permutations(running_order)
+
+    if running_order[0] == 'starting_location':
+        running_order = running_order[1:]
+        running_order = permutations(running_order)
+        for element in running_order:
+            element.insert(0,'starting_location')
+    else:
+        running_order = permutations(running_order)
 
     best_cost = float('inf')
     best_path = []
@@ -698,10 +724,6 @@ def slow_sort(places_dict, running_order, verbose=True):
             id_1 = element[i + 1]
             if running_distance < best_cost and (id_1, id_1) not in ignore:
                 count += 1 
-                lon_0 = places_dict[id_0][0].lng
-                lat_0 = places_dict[id_0][0].lat
-                lon_1 = places_dict[id_1][0].lng
-                lat_1 = places_dict[id_1][0].lat
                 distance = distance_matrix[id_0][id_1]
                 running_distance += distance
                 if i == order_len - 1:
