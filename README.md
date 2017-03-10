@@ -16,10 +16,15 @@ DayTripper is a Django app and utilizes a SQLite database.
 
 # API's and Dependencies
 Foursquare API (API key needed)
+
 GoogleMaps API (API key needed)
+
 Geopy API
+
 Django
+
 Python Libraries: Datetime, Pandas, Queue, Math, Random, JSON, Requests, Base64, Functools, Multiprocessing 
+
 Front-end: CSS, HTML, jQuery, Javascript
 
 # Contributors
@@ -28,4 +33,4 @@ Logan Noel
 Carlos Alvarado
 Tom Jarosz
 
-DayTripper was developed as a project for University of Chicao CS122 class (Winter 2017).
+DayTripper was developed as a project for University of Chicago CS122 class (Winter 2017).
