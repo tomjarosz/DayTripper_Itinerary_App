@@ -110,7 +110,7 @@ def quick_min_cost(path, query, places_dict, epoch_secs, tr_times):
    
 
 def long_min_cost(path, query, places_dict, epoch_secs, 
-                  tr_times, final_run=False, verbose=False):
+                  tr_times, final_run=False, verbose=True):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -179,6 +179,7 @@ def long_min_cost(path, query, places_dict, epoch_secs,
                                                           places_dict,
                                                           mode_of_transit)
         itinerary.append((begin, begin_time, end_time))
+        last_node_end_time = time
         #do the most thorough search
         if final_run:    
             if transit_seconds == MISSING:
@@ -215,6 +216,8 @@ def long_min_cost(path, query, places_dict, epoch_secs,
         time_string = format_time_string(time)
         end_time_string = format_time_string(end_time)
         itinerary.append((end, time_string, end_time_string))
+    else:
+        end_time = last_node_end_time
 
     if verbose: print('end time is', end_time)
     if not final_run:
@@ -372,7 +375,7 @@ def retrieve_transit_time(begin_id, end_id, epoch_secs,
     return rv, tr_times
 
 
-def optimize(query, places_dict, verbose=False):
+def optimize(query, places_dict, verbose=True):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -451,8 +454,12 @@ def optimize(query, places_dict, verbose=False):
         if verbose: print('time is:',time)
         if verbose: print('path is now:',path)
         
+        #finish if close enough to ending time
+        if time >= (time_end - 20) and time <= (time_end + 20):
+            if verbose: print('time was within allowance. now optimized.')
+            optimized = True
         #add or subtract a node for next cycle
-        if time > time_end:
+        elif time > time_end:
             num_included_places -= 1
             prev_above_time = True
             if verbose: print('too long: removed one place')
@@ -465,10 +472,6 @@ def optimize(query, places_dict, verbose=False):
                 optimized = True
             elif prev_above_time:
                 prev_above_time = False
-        #finish if close enough to ending time
-        if time >= (time_end - 20) and time <= (time_end + 20):
-            if verbose: print('time was within allowance. now optimized.')
-            optimized = True
         #finish if unable to resolve path
         if cycle > 20:
             optimized = True
@@ -479,7 +482,7 @@ def optimize(query, places_dict, verbose=False):
     if verbose: print('\ntime at end was: {}'.format(time_end))
     if num_included_places == 0:
         return [], []
-    #Run comprehensive route algorithm.
+    #Run comprehensive route algorithm.Q
     running_queue = comp_sort(places_dict, path)
     best_path = None
     best_path_exceptions = None
@@ -503,12 +506,14 @@ def optimize(query, places_dict, verbose=False):
                 best_path = path
                 best_time = time
                 best_path_priority = priority
+            if verbose: print('time is:',time, 'best_time is:', best_time)
             elif priority >= best_path_priority and time < best_time:
                 best_path = path
                 best_time = time
                 best_path_priority = priority
     if verbose: print('last path to algo:',best_path)
-    itin, exceptions = long_min_cost(best_path, query, places_dict,
+    itin, exceptions = long_min_cost(best_path, query,
+     places_dict,
                                      epoch_secs, tr_times, True)
 
     if verbose: 
