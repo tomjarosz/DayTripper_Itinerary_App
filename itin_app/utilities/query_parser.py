@@ -50,9 +50,6 @@ def parse_query(initial_form_data, proper_city):
         start_lat, start_lng = helper_check_address(user_query['start_location'][0])
 
     arrival_date = datetime.strptime(user_query.get('arrival_date')[0], r'%m/%d/%Y').date()
-    # print(arrival_date)
-    # print(type(arrival_date))
-    #.strftime('%Y-%m-%d')
     
     user_query_obj = UserQuery(
         query_city = user_query.get('query_city')[0],
@@ -100,6 +97,11 @@ def parse_city(query_city):
     #Case 2. Up to this point, we couldn't match user info with data. Now find the new city!
     geolocator = Nominatim()
     location = geolocator.geocode(query_city)
+    
+    #Case 3. City name is not found
+    if not location:
+        return None
+
     reverse_location = geolocator.reverse('{}, {}'.format(location.latitude, location.longitude))
     address = reverse_location.raw['address']
   
@@ -126,23 +128,24 @@ def parse_city(query_city):
 
         return city
     
-    #Case 4. the string does not match a city name
-    city = None
-    
-    return city
+    #Case 4. Reverse match of city failed
+    return None
 
 
 def helper_check_address(address_str):
     '''
-    Function to parse a query_city and get the correct City information
+    Function to parse a "address string" and get the correct latitude and longitude information
     
     Input: a string with a city name (country name optional)
-    Returns: a City object with the appropriate data
+    
+    Returns: lat and lng for given address string. If not found, returns None, None
     '''
         
     geolocator = Nominatim()
     location = geolocator.geocode(address_str)
-    print(location.latitude, location.longitude)
-    return location.latitude, location.longitude
+    if location:
+        return location.latitude, location.longitude
+
+    return None, None
 
 #######
