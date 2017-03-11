@@ -110,7 +110,7 @@ def quick_min_cost(path, query, places_dict, epoch_secs, tr_times):
    
 
 def long_min_cost(path, query, places_dict, epoch_secs, 
-                  tr_times, final_run=False, verbose=True):
+                  tr_times, final_run=False, verbose=False):
     '''
     Calculates the minimum cost to pass through each node in a set
     in any order.
@@ -375,7 +375,7 @@ def retrieve_transit_time(begin_id, end_id, epoch_secs,
     return rv, tr_times
 
 
-def optimize(query, places_dict, verbose=True):
+def optimize(query, places_dict, verbose=False):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -482,7 +482,7 @@ def optimize(query, places_dict, verbose=True):
     if verbose: print('\ntime at end was: {}'.format(time_end))
     if num_included_places == 0:
         return [], []
-    #Run comprehensive route algorithm.Q
+    #Run comprehensive route algorithm.
     running_queue = comp_sort(places_dict, path)
     best_path = None
     best_path_exceptions = None
