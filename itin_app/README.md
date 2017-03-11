@@ -48,3 +48,11 @@ Folder/files descriptions
     up the application in the server, the user should set up this process as an
     automatic process to be run once each day. Use "cron" or similar service for this.
     
+    As of 20170311, this function erases all places older than 7 days. A nice
+    future feature would be to pass a parameter so the Admin can modify the number
+    of days easily.
+    
+    In the shell, run:
+    
+    **python3 manage.py refresh_db**
+    
