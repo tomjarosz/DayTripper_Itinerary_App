@@ -76,14 +76,12 @@ def quick_min_cost(path, query, places_dict, epoch_secs, tr_times):
         places_dict: dict of place objects
         epoch_secs: integer
         tr_times: dict
-    Return: list of strings, integer, int/None, dict
+    Return: int, dict
     '''
     DEFAULT_TIME_SPENT = 45
 
     time = query.time_start.hour * 60 + query.time_start.minute
-    exceptions = []   
-    all_open = True
-    priority = 0
+
     for i in range(len(path) - 1):
         begin = path[i]
         end = path[i + 1]
@@ -120,7 +118,8 @@ def long_min_cost(path, query, places_dict, epoch_secs,
         places_dict: dict of place objects
         epoch_secs: integer
         tr_times: dict
-    Return: list of strings, integer, int/None, dict
+        final run: bool
+    Return: list, list
     '''
     DEFAULT_TIME_SPENT = 45
     THRESHOLD = 1200
@@ -180,7 +179,7 @@ def long_min_cost(path, query, places_dict, epoch_secs,
                                                           mode_of_transit)
         itinerary.append((begin, begin_time, end_time))
         last_node_end_time = time
-        #do the most thorough search
+        #consider all cases if final run
         if final_run:    
             if transit_seconds == MISSING:
                 transit_seconds, tr_times = retrieve_transit_time(begin, end,
@@ -322,6 +321,7 @@ def retrieve_transit_time(begin_id, end_id, epoch_secs,
         epoch_secs: int
         time: int
         tr_times: dict
+        places_dict: dict
         mode_of_transit: string
     Returns: int, dict
     '''
@@ -375,48 +375,39 @@ def retrieve_transit_time(begin_id, end_id, epoch_secs,
     return rv, tr_times
 
 
-def optimize(query, places_dict, verbose=False):
+def parse_ratings(places_dict):
     '''
-    Determines how many nodes can be visited given upper cost
-    constraint.
+    Drop the places user doesn't want, reformat scores for easier usage.
     Inputs:
-        query: custom django object
-        places_dict: dict of tuples
-    Returns: list of place strings, list of exception strings, integer
+        places_dict: dict
+    Returns: int, dict, list of strings
     '''
-    PATHS_TO_TRY = 10
-
-    #Determine which places to include based on user's indicated preferences.
-    if verbose: print('{} nodes to check'.format(len(places_dict.keys())))
     max_priority = 0
-    priority_place_labels = []
+    priority_labels = []
     for key, value in places_dict.items():
         if value[1] == 'mid':
-            priority_place_labels.append(key)
+            priority_labels.append(key)
             places_dict[key] = [value[0], 1]
             max_priority += 1
         elif value[1] == 'up':
-            priority_place_labels.insert(0,key)
+            priority_labels.insert(0,key)
             places_dict[key] = [value[0], 3]
             max_priority += 3
 
-    #Find time in formats neccecary for later computation
-    epoch_date = date(1970,1,1)
-    date_differential = query.arrival_date - epoch_date
-    epoch_secs = int((date_differential).total_seconds())
-    time_end = query.time_end.hour * 60 + query.time_end.minute
-    time_begin = query.time_start.hour * 60 + query.time_start.minute
-    time_window = time_end - time_begin
-    default_initial_time = TRANSIT_CONSTANT[query.mode_transportation]
-    num_included_places = time_window // default_initial_time
-    if verbose: print('started with {} places'.format(num_included_places))
+    return max_priority, places_dict, priority_labels
 
-    #Return empty if not enough time for a single place
-    if num_included_places == 0:
-        return [], []
 
-    #Parse and assign starting location
-    priority_place_labels.insert(0,'starting_location')
+def parse_start_loc(priority_labels, query, places_dict, verbose=False):
+    '''
+    Determine if user's given starting location is valid. Then add
+    to order of nodes to process.
+    Inputs:
+        priority_labels: list of strings
+        query: django obj
+        places_dict: dict
+    Return: list of strings, dict
+    '''
+    priority_labels.insert(0,'starting_location')
     if query.starting_location:
         if verbose: print('user entered a starting location')
         start_dist = haversine(query.city.city_lng, query.city.city_lat, 
@@ -439,6 +430,96 @@ def optimize(query, places_dict, verbose=False):
         base_message = 'window:{}-{}, or {} minutes'
         print(base_message.format(time_begin,time_end,time_window))
 
+    return priority_labels, places_dict
+
+
+def get_final_route(path, places_dict, tr_times, query, epoch_secs, 
+                    max_priority, verbose=True):
+    '''
+    Determines final running path given which nodes to include.
+    Inputs:
+        path: list of strings
+        places_dict: dict
+        tr_times: dict
+        query: django object
+        epoch_secs: int
+        max_priority: int
+    Returns: list of tuples, dict
+    '''
+    PATHS_TO_TRY = 10
+
+    running_queue = comp_sort(places_dict, path)
+    best_path = None
+    best_path_exceptions = None
+    best_time = float('inf')
+    best_path_priority = -1
+    for i in range(PATHS_TO_TRY):
+        if not running_queue.empty():
+            if verbose: print('now trying the {} best run'.format(i))
+            distance, path = running_queue.get()
+            path = path[1:]
+            time, tr_times, priority, all_open = long_min_cost(path,query,
+                                                               places_dict,
+                                                               epoch_secs,
+                                                               tr_times)
+            if verbose: 
+                base_message = 'had priority score {}, out of {} possible'
+                print(base_message.format(priority, max_priority))
+            if verbose: print('and a time of',time)
+            if all_open and time <= best_time:
+                if verbose: print('all open')
+                best_path = path
+                best_time = time
+                best_path_priority = priority
+            elif priority >= best_path_priority and time < best_time:
+                best_path = path
+                best_time = time
+                best_path_priority = priority
+    if verbose: print('last path to algo:',best_path)
+    itin, exceptions = long_min_cost(best_path, query,
+                                     places_dict,
+                                     epoch_secs, tr_times, True)
+
+    if verbose: 
+        base_message = '\npassed on: \npath: {}\nexceptions: {}'
+        print(base_message.format(itin, exceptions))
+
+    return itin, exceptions
+
+
+def optimize(query, places_dict, verbose=True):
+    '''
+    Determines how many nodes can be visited given upper cost
+    constraint.
+    Inputs:
+        query: custom django object
+        places_dict: dict of tuples
+    Returns: list of place strings, list of exception strings, integer
+    '''
+
+    #Determine which places to include based on user's indicated preferences.
+    if verbose: print('{} nodes to check'.format(len(places_dict.keys())))
+    max_priority, places_dict, priority_labels = parse_ratings(places_dict)
+
+    #Find time in formats necessary for later computation
+    epoch_date = date(1970,1,1)
+    date_differential = query.arrival_date - epoch_date
+    epoch_secs = int((date_differential).total_seconds())
+    time_end = query.time_end.hour * 60 + query.time_end.minute
+    time_begin = query.time_start.hour * 60 + query.time_start.minute
+    time_window = time_end - time_begin
+    default_initial_time = TRANSIT_CONSTANT[query.mode_transportation]
+    num_included_places = time_window // default_initial_time
+    if verbose: print('started with {} places'.format(num_included_places))
+
+    #Return empty if not enough time for a single place
+    if num_included_places == 0:
+        return [], []
+
+    #Parse and assign starting location
+    priority_labels, places_dict = parse_start_loc(priority_labels, query,
+                                                   places_dict)
+
     #Main loop, to determine out how many nodes to include.
     tr_times = {}
     optimized = prev_above_time = False
@@ -446,7 +527,7 @@ def optimize(query, places_dict, verbose=False):
     while not optimized:
         cycle += 1
         if verbose: print('cycle',cycle)
-        places_to_include = priority_place_labels[:num_included_places]
+        places_to_include = priority_labels[:num_included_places]
         path, running_distance = branch_bound(query, places_dict, 
                                               places_to_include)
         time, tr_times = quick_min_cost(path, query, places_dict, epoch_secs,
@@ -482,43 +563,11 @@ def optimize(query, places_dict, verbose=False):
     if verbose: print('\ntime at end was: {}'.format(time_end))
     if num_included_places == 0:
         return [], []
-    #Run comprehensive route algorithm.
-    running_queue = comp_sort(places_dict, path)
-    best_path = None
-    best_path_exceptions = None
-    best_time = float('inf')
-    best_path_priority = -1
-    for i in range(PATHS_TO_TRY):
-        if not running_queue.empty():
-            if verbose: print('now trying the {} best run'.format(i))
-            distance, path = running_queue.get()
-            path = path[1:]
-            time, tr_times, priority, all_open = long_min_cost(path,query,
-                                                              places_dict,
-                                                              epoch_secs,
-                                                              tr_times)
-            if verbose: 
-                base_message = 'had priority score {}, out of {} possible'
-                print(base_message.format(priority, max_priority))
-            if verbose: print('and a time of',time)
-            if all_open and time <= best_time:
-                if verbose: print('all open')
-                best_path = path
-                best_time = time
-                best_path_priority = priority
-            if verbose: print('time is:',time, 'best_time is:', best_time)
-            elif priority >= best_path_priority and time < best_time:
-                best_path = path
-                best_time = time
-                best_path_priority = priority
-    if verbose: print('last path to algo:',best_path)
-    itin, exceptions = long_min_cost(best_path, query,
-     places_dict,
-                                     epoch_secs, tr_times, True)
 
-    if verbose: 
-        base_message = '\npassed on: \npath: {}\nexceptions: {}'
-        print(base_message.format(itin, exceptions))
+    #Run comprehensive route algorithm.
+    itin, exceptions = get_final_route(path, places_dict, tr_times, query,
+                                       epoch_secs, max_priority)
+
     return itin, exceptions
    
 
@@ -679,7 +728,7 @@ def permutations(p):
     return rv
 
 
-def comp_sort(places_dict, running_order, verbose=False):
+def comp_sort(places_dict, running_order, verbose=True):
     '''
     Provides a preliminary ranking of node routes based on geographic distance.
     Inputs:
@@ -754,8 +803,8 @@ def comp_sort(places_dict, running_order, verbose=False):
                         best_path = element
             else:
                 break
-    total_segments = math.factorial(len(element)) * (len(element) - 1)
-    if verbose: 
+    if verbose:
+        total_segments = math.factorial(order_len + 1) * order_len
         base_message = 'processed {} % of all segments'
         print(base_message.format(round((count / total_segments) * 100), 4))
 
