@@ -408,7 +408,7 @@ def parse_start_loc(priority_labels, query, places_dict, verbose=False):
     Return: list of strings, dict
     '''
     priority_labels.insert(0,'starting_location')
-    if query.starting_location:
+    if query.starting_location and query.start_lat:
         if verbose: print('user entered a starting location')
         start_dist = haversine(query.city.city_lng, query.city.city_lat, 
                                query.start_lng, query.start_lat)
