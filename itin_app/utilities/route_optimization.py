@@ -434,7 +434,7 @@ def parse_start_loc(priority_labels, query, places_dict, verbose=False):
 
 
 def get_final_route(path, places_dict, tr_times, query, epoch_secs, 
-                    max_priority, verbose=True):
+                    max_priority, verbose=False):
     '''
     Determines final running path given which nodes to include.
     Inputs:
@@ -487,7 +487,7 @@ def get_final_route(path, places_dict, tr_times, query, epoch_secs,
     return itin, exceptions
 
 
-def optimize(query, places_dict, verbose=True):
+def optimize(query, places_dict, verbose=False):
     '''
     Determines how many nodes can be visited given upper cost
     constraint.
@@ -728,7 +728,7 @@ def permutations(p):
     return rv
 
 
-def comp_sort(places_dict, running_order, verbose=True):
+def comp_sort(places_dict, running_order, verbose=False):
     '''
     Provides a preliminary ranking of node routes based on geographic distance.
     Inputs:
