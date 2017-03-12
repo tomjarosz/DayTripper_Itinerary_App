@@ -13,28 +13,36 @@
         padding: 2;
       }
       header{
-        padding:1em;
+        display: block;
+        padding:5px;
         color:white;
         background-color:008ae6;
         clear:left;
         text-align:left;
+        font-size:30px;
+        font-family:Tahoma, sans-serif;
+        margin:0;
+        line-height:0.5em;
+        font-weight:lighter;
       }
       footer{
-        padding:1em;
+        display: block;
+        padding:5px;
         color:white;
         background-color:008ae6;
         clear:left;
         text-align:left;
-        font-size:14px;
+        font-size:15px;
+        font-family:Tahoma, sans-serif;
+        margin:0;
+        line-height:0.5em;
+        font-weight:lighter;
       }
     </style>
 
 <header>
-<font face="Tahoma, Geneva, sans-serif" </font>
-<font size=7 <h1>DayTripper</h1> 
-</font><br> <font size = 4
-<h2><i>Build your custom itinerary for the day</i></h2>
-</font>
+    <h1>DayTripper</h1> 
+    <div style="font-size:17 !important;"<h2><i>Build your custom itinerary for the day</i></h2></div>
 </header>
 
 <head>
@@ -55,14 +63,17 @@
     });
   } );
   </script>
-    <script>
+    
+  <script>
   $( function() {
     $( "#datepicker" ).datepicker();
   } );
   </script>
+  
   <style>
   #slider-range{width:400px;}
   </style>
+ 
   <script>
   $( function() {
     $( "#slider-range" ).slider({
@@ -97,29 +108,29 @@
 <form action="{% url 'itinerary:index' %}" method="post">
     {% csrf_token %}
     <font face="Tahoma, Geneva, sans-serif"
-    <p>
-    <br>
+    <p> <br>
     Let's start off by getting some information about what your schedule and transportation looks like as well as the types of places you want to visit.
-    <br> 
-    <br>
+    <br> <br>
     Simply fill out the fields below... 
-    <br>
-    <br>
-  
+    <br><br>
     </p>
+
     <p><b><font color="#009999">
     City to visit*:
     </b></font><input id="tags" name="query_city" value="{{ user_query.query_city }}">
     </p>
+    
     <p><b><font color="#009999">
     Day of visit:
     </b></font><input type="text" id="datepicker" name="arrival_date" value="{{ user_query.arrival_date|date:'m/d/Y' }}">
     </p>
+    
     <p><b><font color="#009999">
     Start-end time:
     </b></font><input type="text" id="amount-time" name="time_frame" readonly style="border:0; color:#000000;">
     <div id="slider-range"></div>
     </p>
+    
     <p><b><font color="#009999">
     Search by categories:
     </b></font><br>
@@ -127,6 +138,7 @@
     <input type="checkbox" name="cat{{ category.user_cat_id }}" value="{{ category.user_cat_id }}" /> {{ category.user_category }} <br>
     {% endfor %}
     </p>
+    
     <p><b><font color="#009999">
     Select mode of transportation:
     <select name="mode_transportation">
@@ -137,11 +149,11 @@
         <option value="transit">Public Trans.</option>
     </select>
     </p>
+    
     <p><b><font color="#009999">
     Starting location (address):
     </b></font><input type="text" name="start_location" value="{{ user_query.starting_location }}">
     </p>
-
     
 <input type="submit" value="Send" />
 <input type="reset">
@@ -150,7 +162,6 @@
 <br>
 
 <footer>
-  <font
     <p>Thanks for visiting DayTripper!</p>
-</font>
-</html
+</footer>
+</html>
