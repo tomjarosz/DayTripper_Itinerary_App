@@ -1,53 +1,6 @@
-<html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>DayTripper Itinerary</title>
-    <style>
-      #map {
-        height: 100%;
-        margin: 2;
-        padding: 2;
-      }
-      div.container {
-        width:100%;
-      }
-      html, body {
-        height: 99%;
-        margin: 2;
-        padding: 2;
-        font-family:Tahoma, sans-serif;
-      }
-      header{
-        display: block;
-        padding:5px;
-        color:white;
-        background-color:008ae6;
-        clear:left;
-        text-align:left;
-        font-size:30px;
-        font-family:Tahoma, sans-serif;
-        margin:0;
-        line-height:0.5em;
-      }
-      footer{
-        display: block;
-        padding:5px;
-        color:white;
-        background-color:008ae6;
-        clear:left;
-        text-align:left;
-        font-size:15px;
-        font-family:Tahoma, sans-serif;
-        margin:0;
-        line-height:0.5em;
-      }
-    </style>
-
-<header>
-    <h1>DayTripper</h1> 
-    <div style="font-size:17 !important;"<h2><i>Build your custom itinerary for the day</i></h2></div>
-</header>
+{% extends "itinerary/layout.html" %}
+{% block content %}
+<title>DayTripper Itinerary</title>
 
   <br>
   <div style "font-size:17 !important;"<p>Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, from {{ query.time_start }} to {{ query.time_end }} based on your mode of transportation-- {{ query.mode_transportation }}.
@@ -55,7 +8,6 @@
   <br>
   **If you follow the rough itinerary below, you'll make the most out of your time at the locations you want to visit and minimize your transit time. We've made sure to prioritize the places you want to visit most. If is seems that your suggested route is longer than it could be, it's because of a conflict with the operating hours of one or more places in the itinerary. 
   </p>
-  <br>
   <br>
 
 <table style="width:100%">
@@ -127,16 +79,14 @@
         {% endfor %} 
         map.fitBounds(bounds);
         }
-
     </script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBXmwexQtLS4X87d8qFf7XVFH5nnrpvAN8&callback=initMap">
     </script>
   </body>
-</html>
-
 
 <footer>
     <p>DayTripper is supported by the FourSquare and GoogleMaps APIs.
 </footer>
-</html
+</html>
+{% endblock %}

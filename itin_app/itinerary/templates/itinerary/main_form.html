@@ -1,48 +1,8 @@
-<html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Welcome to DayTripper</title>
-    <style>
-      div.container {
-        width:100%;
-      }
-      html, body {
-        height: 99%;
-        margin: 2;
-        padding: 2;
-        font-family:Tahoma, sans-serif;
-      }
-      header{
-        display: block;
-        padding:5px;
-        color:white;
-        background-color:008ae6;
-        clear:left;
-        text-align:left;
-        font-size:30px;
-        font-family:Tahoma, sans-serif;
-        margin:0;
-        line-height:0.5em;
-      }
-      footer{
-        display: block;
-        padding:5px;
-        color:white;
-        background-color:008ae6;
-        clear:left;
-        text-align:left;
-        font-size:15px;
-        font-family:Tahoma, sans-serif;
-        margin:0;
-        line-height:0.5em;
-      }
-    </style>
+{% extends "itinerary/layout.html" %}
 
-<header>
-    <h1>DayTripper</h1> 
-    <div style="font-size:17 !important;"<h2><i>Build your custom itinerary for the day</i></h2></div>
-</header>
+
+{% block content %}
+<title>Welcome to DayTripper</title>
 
 <head>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -162,3 +122,5 @@
     <p>Thanks for visiting DayTripper!</p>
 </footer>
 </html>
+
+{% endblock %}
