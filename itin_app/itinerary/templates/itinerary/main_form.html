@@ -111,7 +111,8 @@
     Simply fill out the fields below... 
     <br><br>
     </p>
-
+    {% block title %}
+    {% endblock %}
     <p><b><font color="#009999">
     City to visit*:
     </b></font><input id="tags" name="query_city" value="{{ user_query.query_city }}">
