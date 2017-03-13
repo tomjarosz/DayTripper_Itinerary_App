@@ -27,6 +27,12 @@ Python Libraries: Datetime, Pandas, Queue, Math, Random, JSON, Requests, Base64,
 
 Front-end: CSS, HTML, jQuery, Javascript
 
+# Attributions/Acknowledgments
+
+Mapping functionality: https://developers.google.com/maps/documentation/javascript/markers
+
+Styling and front-end: https://www.w3schools.com/html/html_css.asp
+
 # Contributors
 
 Logan Noel
