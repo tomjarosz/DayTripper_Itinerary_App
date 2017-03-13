@@ -11,6 +11,7 @@
         height: 99%;
         margin: 2;
         padding: 2;
+        font-family:Tahoma, sans-serif;
       }
       header{
         display: block;
@@ -23,7 +24,6 @@
         font-family:Tahoma, sans-serif;
         margin:0;
         line-height:0.5em;
-        font-weight:lighter;
       }
       footer{
         display: block;
@@ -36,7 +36,6 @@
         font-family:Tahoma, sans-serif;
         margin:0;
         line-height:0.5em;
-        font-weight:lighter;
       }
     </style>
 
@@ -107,9 +106,7 @@
 
 <form action="{% url 'itinerary:index' %}" method="post">
     {% csrf_token %}
-    <font face="Tahoma, Geneva, sans-serif"
-    <p> <br>
-    Let's start off by getting some information about what your schedule and transportation looks like as well as the types of places you want to visit.
+    <p>Let's start off by getting some information about what your schedule and transportation looks like as well as the types of places you want to visit.
     <br> <br>
     Simply fill out the fields below... 
     <br><br>

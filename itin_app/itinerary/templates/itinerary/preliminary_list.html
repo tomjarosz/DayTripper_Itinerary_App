@@ -2,7 +2,7 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>DayTripper: Rank Locations</title>
+    <title>DayTripper:Rank Locations</title>
     <style>
       div.container {
         width:100%;
@@ -11,46 +11,51 @@
         height: 99%;
         margin: 2;
         padding: 2;
+        font-family:Tahoma, sans-serif;
       }
       header{
-        padding:1em;
+        display: block;
+        padding:5px;
         color:white;
         background-color:008ae6;
         clear:left;
         text-align:left;
+        font-size:30px;
+        font-family:Tahoma, sans-serif;
+        margin:0;
+        line-height:0.5em;
       }
       footer{
-        padding:1em;
+        display: block;
+        padding:5px;
         color:white;
         background-color:008ae6;
         clear:left;
         text-align:left;
-        font-size:14px;
+        font-size:15px;
+        font-family:Tahoma, sans-serif;
+        margin:0;
+        line-height:0.5em;
       }
     </style>
-  </head>
 
 <header>
-<font face="Tahoma, Geneva, sans-serif" </font>
-<font size=7 <h1>DayTripper</h1> 
-</font><br> <font size = 4
-<h2><i>Build your custom itinerary for the day</i></h2>
-</font>
+    <h1>DayTripper</h1> 
+    <div style="font-size:17 !important;"<h2><i>Build your custom itinerary for the day</i></h2></div>
 </header>
-<br>
-<font size=3
-</font>
+
+<p>
 Here are the best places we picked out based on your preferences!
 <br>
 <br>Use the drop-down menu for each location to tell us what you think about them. Then based on operating hours, locations, and your mode of transporation, we'll build your itinerary with some or all of these locations.
-<br>
+<br></p>
 <br>
     <form action="{% url 'itinerary:index' %}" method="get">
     {% csrf_token %}
     <input type='hidden' name='query_id_from_form' value='{{ query_id }}' />
         <table style="width:100%">
           <tr>
-            <th><font color="#009999">Photo</font></th>
+            <th> </th>
             <th><font color="#009999">Place Name</font></th>
             <th><font color="#009999">Checkins</font></th> 
             <th><font color="#009999">User Preference</font></th>
@@ -80,9 +85,11 @@ Here are the best places we picked out based on your preferences!
     <input type="submit" value="Submit" />
     </form>
 
-    <footer>
-    <font
-    <p>DayTripper is supported by the FourSquare and GoogleMaps APIs.<br>
+
+<footer>
+    <p>DayTripper is supported by the FourSquare and GoogleMaps APIs.
+        <br>
+        <br>
         *This is the query id: {{ query_id }}</p>
-</font>
-</html
+</footer>
+</html>

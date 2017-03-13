@@ -16,40 +16,48 @@
         height: 99%;
         margin: 2;
         padding: 2;
+        font-family:Tahoma, sans-serif;
       }
       header{
-        padding:1em;
+        display: block;
+        padding:5px;
         color:white;
         background-color:008ae6;
         clear:left;
         text-align:left;
+        font-size:30px;
+        font-family:Tahoma, sans-serif;
+        margin:0;
+        line-height:0.5em;
       }
       footer{
-        padding:1em;
+        display: block;
+        padding:5px;
         color:white;
         background-color:008ae6;
         clear:left;
         text-align:left;
-        font-size:14px;
+        font-size:15px;
+        font-family:Tahoma, sans-serif;
+        margin:0;
+        line-height:0.5em;
       }
     </style>
 
 <header>
-<font face="Tahoma, Geneva, sans-serif" </font>
-<font size=7 <h1>DayTripper</h1> 
-</font><br> <font size = 4
-<h2><i>Build your custom itinerary for the day</i></h2>
-</font>
+    <h1>DayTripper</h1> 
+    <div style="font-size:17 !important;"<h2><i>Build your custom itinerary for the day</i></h2></div>
 </header>
-<br>
-<font size=3
-</font>
-Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, from {{ query.time_start }} to {{ query.time_end }} based on your mode of transportation-- {{ query.mode_transportation }}.
-<br>
-<br>
-**If you follow the rough itinerary below, you'll make the most out of your time at the locations you want to visit and minimize your transit time. We've made sure to prioritize the places you want to visit most. If is seems that your suggested route is longer than it could be, it's because of a conflict with the operating hours of one or more places in the itinerary. 
-<br>
-<br>
+
+  <br>
+  <div style "font-size:17 !important;"<p>Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, from {{ query.time_start }} to {{ query.time_end }} based on your mode of transportation-- {{ query.mode_transportation }}.
+  <br>
+  <br>
+  **If you follow the rough itinerary below, you'll make the most out of your time at the locations you want to visit and minimize your transit time. We've made sure to prioritize the places you want to visit most. If is seems that your suggested route is longer than it could be, it's because of a conflict with the operating hours of one or more places in the itinerary. 
+  </p>
+  <br>
+  <br>
+
 <table style="width:100%">
   <tr>
     <th> </th>
@@ -127,8 +135,8 @@ Here is your custom itinerary for {{ query.city }} on {{ query.arrival_date }}, 
   </body>
 </html>
 
-  <footer>
-  <font
+
+<footer>
     <p>DayTripper is supported by the FourSquare and GoogleMaps APIs.
-</font>
+</footer>
 </html
