@@ -14,7 +14,7 @@ DayTripper is a Django app and utilizes a SQLite database.
 
 4. The ordered list of locations is returned to the user with selected attributes and map. 
 
-# API's and Dependencies
+# APIs and Dependencies
 Foursquare API (API key needed)
 
 GoogleMaps API (API key needed)
@@ -28,7 +28,6 @@ Python Libraries: Datetime, Pandas, Queue, Math, Random, JSON, Requests, Base64,
 Front-end: CSS, HTML, jQuery, Javascript
 
 # Attributions/Acknowledgments
-
 Mapping functionality: https://developers.google.com/maps/documentation/javascript/markers
 
 Styling and front-end: https://www.w3schools.com/html/html_css.asp
