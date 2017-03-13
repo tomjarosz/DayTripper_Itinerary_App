@@ -9,8 +9,11 @@ import json
 import requests
 #from utilities.weather import Weather
 
-CLIENT_ID='C1MWPLVELHVOWEQDPZ3FQX2QL31BD5FE44Y0JQBKNRUA1UOA'
-CLIENT_SECRET='0FRFY3QUW0LZGA32TMEFOSCUQYIXMUK2YU4RSDHJ1EQLA0AQ'
+with open('./utilities/keys.json', 'r') as f:
+    secret_data = json.load(f)
+
+CLIENT_ID = secret_data['ID']
+CLIENT_SECRET = secret_data['SECRET']
 
 def get_place_from_place_dict(place_dict, city_id, category):
     city_obj = City.objects.get(pk=city_id)
