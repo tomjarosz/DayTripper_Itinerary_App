@@ -28,6 +28,8 @@ Python Libraries: Datetime, Pandas, Queue, Math, Random, JSON, Requests, Base64,
 Front-end: CSS, HTML, jQuery, Javascript
 
 # Attributions/Acknowledgments
+User Form functionalities (JQuery): https://jqueryui.com/ and http://marcneuwirth.com/blog/2010/02/21/using-a-jquery-ui-slider-to-select-a-time-range/
+
 Mapping functionality: https://developers.google.com/maps/documentation/javascript/markers
 
 Styling and front-end: https://www.w3schools.com/html/html_css.asp
